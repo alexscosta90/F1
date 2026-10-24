@@ -1,0 +1,23 @@
+﻿name: quality
+on:
+  push:
+  pull_request:
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: snok/install-poetry@v1
+        with:
+          version: "2.5.1"
+      - run: poetry config virtualenvs.in-project true
+      - run: poetry install --no-interaction
+      - run: poetry check
+      - run: poetry run ruff check .
+      - run: poetry run ruff format . --check
+      - run: poetry run ruff check . --select I
+      - run: poetry run pytest tests/unit --cov=f1 --cov-report=term-missing --cov-fail-under=50
+      - run: poetry run mkdocs build

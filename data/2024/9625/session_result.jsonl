@@ -1,0 +1,20 @@
+{"dnf": false, "dns": false, "driver_number": 55, "dsq": false, "duration": 6055.8, "gap_to_leader": 0, "meeting_key": 1248, "number_of_laps": 71, "points": 25.0, "position": 1, "session_key": 9625}
+{"dnf": false, "dns": false, "driver_number": 4, "dsq": false, "duration": 6060.505, "gap_to_leader": 4.705, "meeting_key": 1248, "number_of_laps": 71, "points": 18.0, "position": 2, "session_key": 9625}
+{"dnf": false, "dns": false, "driver_number": 16, "dsq": false, "duration": 6090.187, "gap_to_leader": 34.387, "meeting_key": 1248, "number_of_laps": 71, "points": 16.0, "position": 3, "session_key": 9625}
+{"dnf": false, "dns": false, "driver_number": 44, "dsq": false, "duration": 6100.58, "gap_to_leader": 44.78, "meeting_key": 1248, "number_of_laps": 71, "points": 12.0, "position": 4, "session_key": 9625}
+{"dnf": false, "dns": false, "driver_number": 63, "dsq": false, "duration": 6104.336, "gap_to_leader": 48.536, "meeting_key": 1248, "number_of_laps": 71, "points": 10.0, "position": 5, "session_key": 9625}
+{"dnf": false, "dns": false, "driver_number": 1, "dsq": false, "duration": 6115.358, "gap_to_leader": 59.558, "meeting_key": 1248, "number_of_laps": 71, "points": 8.0, "position": 6, "session_key": 9625}
+{"dnf": false, "dns": false, "driver_number": 20, "dsq": false, "duration": 6119.442, "gap_to_leader": 63.642, "meeting_key": 1248, "number_of_laps": 71, "points": 6.0, "position": 7, "session_key": 9625}
+{"dnf": false, "dns": false, "driver_number": 81, "dsq": false, "duration": 6120.728, "gap_to_leader": 64.928, "meeting_key": 1248, "number_of_laps": 71, "points": 4.0, "position": 8, "session_key": 9625}
+{"dnf": false, "dns": false, "driver_number": 27, "dsq": false, "duration": null, "gap_to_leader": "+1 LAP", "meeting_key": 1248, "number_of_laps": 70, "points": 2.0, "position": 9, "session_key": 9625}
+{"dnf": false, "dns": false, "driver_number": 10, "dsq": false, "duration": null, "gap_to_leader": "+1 LAP", "meeting_key": 1248, "number_of_laps": 70, "points": 1.0, "position": 10, "session_key": 9625}
+{"dnf": false, "dns": false, "driver_number": 18, "dsq": false, "duration": null, "gap_to_leader": "+1 LAP", "meeting_key": 1248, "number_of_laps": 70, "points": 0.0, "position": 11, "session_key": 9625}
+{"dnf": false, "dns": false, "driver_number": 43, "dsq": false, "duration": null, "gap_to_leader": "+1 LAP", "meeting_key": 1248, "number_of_laps": 70, "points": 0.0, "position": 12, "session_key": 9625}
+{"dnf": false, "dns": false, "driver_number": 31, "dsq": false, "duration": null, "gap_to_leader": "+1 LAP", "meeting_key": 1248, "number_of_laps": 70, "points": 0.0, "position": 13, "session_key": 9625}
+{"dnf": false, "dns": false, "driver_number": 77, "dsq": false, "duration": null, "gap_to_leader": "+1 LAP", "meeting_key": 1248, "number_of_laps": 70, "points": 0.0, "position": 14, "session_key": 9625}
+{"dnf": false, "dns": false, "driver_number": 24, "dsq": false, "duration": null, "gap_to_leader": "+1 LAP", "meeting_key": 1248, "number_of_laps": 70, "points": 0.0, "position": 15, "session_key": 9625}
+{"dnf": false, "dns": false, "driver_number": 30, "dsq": false, "duration": null, "gap_to_leader": "+1 LAP", "meeting_key": 1248, "number_of_laps": 70, "points": 0.0, "position": 16, "session_key": 9625}
+{"dnf": false, "dns": false, "driver_number": 11, "dsq": false, "duration": null, "gap_to_leader": "+1 LAP", "meeting_key": 1248, "number_of_laps": 70, "points": 0.0, "position": 17, "session_key": 9625}
+{"dnf": true, "dns": false, "driver_number": 14, "dsq": false, "duration": null, "gap_to_leader": null, "meeting_key": 1248, "number_of_laps": 15, "points": 0.0, "position": null, "session_key": 9625}
+{"dnf": true, "dns": false, "driver_number": 23, "dsq": false, "duration": null, "gap_to_leader": null, "meeting_key": 1248, "number_of_laps": 0, "points": 0.0, "position": null, "session_key": 9625}
+{"dnf": true, "dns": false, "driver_number": 22, "dsq": false, "duration": null, "gap_to_leader": null, "meeting_key": 1248, "number_of_laps": 0, "points": 0.0, "position": null, "session_key": 9625}

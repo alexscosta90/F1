@@ -1,0 +1,12 @@
+﻿site_name: F1 OpenF1 Data Pipeline
+site_description: Coleta local e reprodutível de dados históricos da OpenF1
+site_dir: site
+docs_dir: docs
+nav:
+  - Início: index.md
+  - Início rápido: getting-started.md
+  - Arquitetura: architecture.md
+  - Dashboard: dashboard.md
+  - Desenvolvimento e testes: development.md
+theme:
+  name: material
