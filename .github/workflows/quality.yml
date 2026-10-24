@@ -26,12 +26,19 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          cache: poetry
 
       - name: Install Poetry
         uses: snok/install-poetry@v1
         with:
           version: "2.5.1"
+
+      - name: Cache Poetry downloads
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pypoetry
+          key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
 
       - name: Configure Poetry
         run: poetry config virtualenvs.in-project true
