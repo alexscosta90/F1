@@ -1,0 +1,20 @@
+{"dnf": false, "dns": false, "driver_number": 1, "dsq": false, "duration": 6347.927, "gap_to_leader": 0, "meeting_key": 1237, "number_of_laps": 70, "points": 25.0, "position": 1, "session_key": 9531}
+{"dnf": false, "dns": false, "driver_number": 4, "dsq": false, "duration": 6351.806, "gap_to_leader": 3.879, "meeting_key": 1237, "number_of_laps": 70, "points": 18.0, "position": 2, "session_key": 9531}
+{"dnf": false, "dns": false, "driver_number": 63, "dsq": false, "duration": 6352.244, "gap_to_leader": 4.317, "meeting_key": 1237, "number_of_laps": 70, "points": 15.0, "position": 3, "session_key": 9531}
+{"dnf": false, "dns": false, "driver_number": 44, "dsq": false, "duration": 6352.842, "gap_to_leader": 4.915, "meeting_key": 1237, "number_of_laps": 70, "points": 13.0, "position": 4, "session_key": 9531}
+{"dnf": false, "dns": false, "driver_number": 81, "dsq": false, "duration": 6358.126, "gap_to_leader": 10.199, "meeting_key": 1237, "number_of_laps": 70, "points": 10.0, "position": 5, "session_key": 9531}
+{"dnf": false, "dns": false, "driver_number": 14, "dsq": false, "duration": 6365.437, "gap_to_leader": 17.51, "meeting_key": 1237, "number_of_laps": 70, "points": 8.0, "position": 6, "session_key": 9531}
+{"dnf": false, "dns": false, "driver_number": 18, "dsq": false, "duration": 6371.552, "gap_to_leader": 23.625, "meeting_key": 1237, "number_of_laps": 70, "points": 6.0, "position": 7, "session_key": 9531}
+{"dnf": false, "dns": false, "driver_number": 3, "dsq": false, "duration": 6376.599, "gap_to_leader": 28.672, "meeting_key": 1237, "number_of_laps": 70, "points": 4.0, "position": 8, "session_key": 9531}
+{"dnf": false, "dns": false, "driver_number": 10, "dsq": false, "duration": 6377.948, "gap_to_leader": 30.021, "meeting_key": 1237, "number_of_laps": 70, "points": 2.0, "position": 9, "session_key": 9531}
+{"dnf": false, "dns": false, "driver_number": 31, "dsq": false, "duration": 6378.24, "gap_to_leader": 30.313, "meeting_key": 1237, "number_of_laps": 70, "points": 1.0, "position": 10, "session_key": 9531}
+{"dnf": false, "dns": false, "driver_number": 27, "dsq": false, "duration": 6378.751, "gap_to_leader": 30.824, "meeting_key": 1237, "number_of_laps": 70, "points": 0.0, "position": 11, "session_key": 9531}
+{"dnf": false, "dns": false, "driver_number": 20, "dsq": false, "duration": 6379.18, "gap_to_leader": 31.253, "meeting_key": 1237, "number_of_laps": 70, "points": 0.0, "position": 12, "session_key": 9531}
+{"dnf": false, "dns": false, "driver_number": 77, "dsq": false, "duration": 6388.414, "gap_to_leader": 40.487, "meeting_key": 1237, "number_of_laps": 70, "points": 0.0, "position": 13, "session_key": 9531}
+{"dnf": false, "dns": false, "driver_number": 22, "dsq": false, "duration": 6400.621, "gap_to_leader": 52.694, "meeting_key": 1237, "number_of_laps": 70, "points": 0.0, "position": 14, "session_key": 9531}
+{"dnf": false, "dns": false, "driver_number": 24, "dsq": false, "duration": null, "gap_to_leader": "+1 LAP", "meeting_key": 1237, "number_of_laps": 69, "points": 0.0, "position": 15, "session_key": 9531}
+{"dnf": true, "dns": false, "driver_number": 55, "dsq": false, "duration": null, "gap_to_leader": null, "meeting_key": 1237, "number_of_laps": 52, "points": 0.0, "position": null, "session_key": 9531}
+{"dnf": true, "dns": false, "driver_number": 23, "dsq": false, "duration": null, "gap_to_leader": null, "meeting_key": 1237, "number_of_laps": 52, "points": 0.0, "position": null, "session_key": 9531}
+{"dnf": true, "dns": false, "driver_number": 11, "dsq": false, "duration": null, "gap_to_leader": null, "meeting_key": 1237, "number_of_laps": 51, "points": 0.0, "position": null, "session_key": 9531}
+{"dnf": true, "dns": false, "driver_number": 16, "dsq": false, "duration": null, "gap_to_leader": null, "meeting_key": 1237, "number_of_laps": 40, "points": 0.0, "position": null, "session_key": 9531}
+{"dnf": true, "dns": false, "driver_number": 2, "dsq": false, "duration": null, "gap_to_leader": null, "meeting_key": 1237, "number_of_laps": 23, "points": 0.0, "position": null, "session_key": 9531}

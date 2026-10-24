@@ -1,0 +1,20 @@
+{"dnf": false, "dns": false, "driver_number": 4, "dsq": false, "duration": 5193.291, "gap_to_leader": 0, "meeting_key": 1252, "number_of_laps": 58, "points": 25.0, "position": 1, "session_key": 9662}
+{"dnf": false, "dns": false, "driver_number": 55, "dsq": false, "duration": 5199.123, "gap_to_leader": 5.832, "meeting_key": 1252, "number_of_laps": 58, "points": 18.0, "position": 2, "session_key": 9662}
+{"dnf": false, "dns": false, "driver_number": 16, "dsq": false, "duration": 5225.219, "gap_to_leader": 31.928, "meeting_key": 1252, "number_of_laps": 58, "points": 15.0, "position": 3, "session_key": 9662}
+{"dnf": false, "dns": false, "driver_number": 44, "dsq": false, "duration": 5229.774, "gap_to_leader": 36.483, "meeting_key": 1252, "number_of_laps": 58, "points": 12.0, "position": 4, "session_key": 9662}
+{"dnf": false, "dns": false, "driver_number": 63, "dsq": false, "duration": 5230.829, "gap_to_leader": 37.538, "meeting_key": 1252, "number_of_laps": 58, "points": 10.0, "position": 5, "session_key": 9662}
+{"dnf": false, "dns": false, "driver_number": 1, "dsq": false, "duration": 5243.138, "gap_to_leader": 49.847, "meeting_key": 1252, "number_of_laps": 58, "points": 8.0, "position": 6, "session_key": 9662}
+{"dnf": false, "dns": false, "driver_number": 10, "dsq": false, "duration": 5265.851, "gap_to_leader": 72.56, "meeting_key": 1252, "number_of_laps": 58, "points": 6.0, "position": 7, "session_key": 9662}
+{"dnf": false, "dns": false, "driver_number": 27, "dsq": false, "duration": 5268.845, "gap_to_leader": 75.554, "meeting_key": 1252, "number_of_laps": 58, "points": 4.0, "position": 8, "session_key": 9662}
+{"dnf": false, "dns": false, "driver_number": 14, "dsq": false, "duration": 5275.664, "gap_to_leader": 82.373, "meeting_key": 1252, "number_of_laps": 58, "points": 2.0, "position": 9, "session_key": 9662}
+{"dnf": false, "dns": false, "driver_number": 81, "dsq": false, "duration": 5277.112, "gap_to_leader": 83.821, "meeting_key": 1252, "number_of_laps": 58, "points": 1.0, "position": 10, "session_key": 9662}
+{"dnf": false, "dns": false, "driver_number": 23, "dsq": false, "duration": null, "gap_to_leader": "+1 LAP", "meeting_key": 1252, "number_of_laps": 57, "points": 0.0, "position": 11, "session_key": 9662}
+{"dnf": false, "dns": false, "driver_number": 22, "dsq": false, "duration": null, "gap_to_leader": "+1 LAP", "meeting_key": 1252, "number_of_laps": 57, "points": 0.0, "position": 12, "session_key": 9662}
+{"dnf": false, "dns": false, "driver_number": 24, "dsq": false, "duration": null, "gap_to_leader": "+1 LAP", "meeting_key": 1252, "number_of_laps": 57, "points": 0.0, "position": 13, "session_key": 9662}
+{"dnf": false, "dns": false, "driver_number": 18, "dsq": false, "duration": null, "gap_to_leader": "+1 LAP", "meeting_key": 1252, "number_of_laps": 57, "points": 0.0, "position": 14, "session_key": 9662}
+{"dnf": false, "dns": false, "driver_number": 61, "dsq": false, "duration": null, "gap_to_leader": "+1 LAP", "meeting_key": 1252, "number_of_laps": 57, "points": 0.0, "position": 15, "session_key": 9662}
+{"dnf": false, "dns": false, "driver_number": 20, "dsq": false, "duration": null, "gap_to_leader": "+1 LAP", "meeting_key": 1252, "number_of_laps": 57, "points": 0.0, "position": 16, "session_key": 9662}
+{"dnf": true, "dns": false, "driver_number": 30, "dsq": false, "duration": null, "gap_to_leader": null, "meeting_key": 1252, "number_of_laps": 55, "points": 0.0, "position": 17, "session_key": 9662}
+{"dnf": true, "dns": false, "driver_number": 77, "dsq": false, "duration": null, "gap_to_leader": null, "meeting_key": 1252, "number_of_laps": 30, "points": 0.0, "position": null, "session_key": 9662}
+{"dnf": true, "dns": false, "driver_number": 43, "dsq": false, "duration": null, "gap_to_leader": null, "meeting_key": 1252, "number_of_laps": 26, "points": 0.0, "position": null, "session_key": 9662}
+{"dnf": true, "dns": false, "driver_number": 11, "dsq": false, "duration": null, "gap_to_leader": null, "meeting_key": 1252, "number_of_laps": 0, "points": 0.0, "position": null, "session_key": 9662}

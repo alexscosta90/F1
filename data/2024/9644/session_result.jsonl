@@ -1,0 +1,20 @@
+{"dnf": false, "dns": false, "driver_number": 63, "dsq": false, "duration": 4925.969, "gap_to_leader": 0, "meeting_key": 1250, "number_of_laps": 50, "points": 25.0, "position": 1, "session_key": 9644}
+{"dnf": false, "dns": false, "driver_number": 44, "dsq": false, "duration": 4933.282, "gap_to_leader": 7.313, "meeting_key": 1250, "number_of_laps": 50, "points": 18.0, "position": 2, "session_key": 9644}
+{"dnf": false, "dns": false, "driver_number": 55, "dsq": false, "duration": 4937.875, "gap_to_leader": 11.906, "meeting_key": 1250, "number_of_laps": 50, "points": 15.0, "position": 3, "session_key": 9644}
+{"dnf": false, "dns": false, "driver_number": 16, "dsq": false, "duration": 4940.252, "gap_to_leader": 14.283, "meeting_key": 1250, "number_of_laps": 50, "points": 12.0, "position": 4, "session_key": 9644}
+{"dnf": false, "dns": false, "driver_number": 1, "dsq": false, "duration": 4942.551, "gap_to_leader": 16.582, "meeting_key": 1250, "number_of_laps": 50, "points": 10.0, "position": 5, "session_key": 9644}
+{"dnf": false, "dns": false, "driver_number": 4, "dsq": false, "duration": 4969.354, "gap_to_leader": 43.385, "meeting_key": 1250, "number_of_laps": 50, "points": 9.0, "position": 6, "session_key": 9644}
+{"dnf": false, "dns": false, "driver_number": 81, "dsq": false, "duration": 4977.334, "gap_to_leader": 51.365, "meeting_key": 1250, "number_of_laps": 50, "points": 6.0, "position": 7, "session_key": 9644}
+{"dnf": false, "dns": false, "driver_number": 27, "dsq": false, "duration": 4985.777, "gap_to_leader": 59.808, "meeting_key": 1250, "number_of_laps": 50, "points": 4.0, "position": 8, "session_key": 9644}
+{"dnf": false, "dns": false, "driver_number": 22, "dsq": false, "duration": 4988.777, "gap_to_leader": 62.808, "meeting_key": 1250, "number_of_laps": 50, "points": 2.0, "position": 9, "session_key": 9644}
+{"dnf": false, "dns": false, "driver_number": 11, "dsq": false, "duration": 4989.083, "gap_to_leader": 63.114, "meeting_key": 1250, "number_of_laps": 50, "points": 1.0, "position": 10, "session_key": 9644}
+{"dnf": false, "dns": false, "driver_number": 14, "dsq": false, "duration": 4995.164, "gap_to_leader": 69.195, "meeting_key": 1250, "number_of_laps": 50, "points": 0.0, "position": 11, "session_key": 9644}
+{"dnf": false, "dns": false, "driver_number": 20, "dsq": false, "duration": 4995.772, "gap_to_leader": 69.803, "meeting_key": 1250, "number_of_laps": 50, "points": 0.0, "position": 12, "session_key": 9644}
+{"dnf": false, "dns": false, "driver_number": 24, "dsq": false, "duration": 5000.054, "gap_to_leader": 74.085, "meeting_key": 1250, "number_of_laps": 50, "points": 0.0, "position": 13, "session_key": 9644}
+{"dnf": false, "dns": false, "driver_number": 43, "dsq": false, "duration": 5001.141, "gap_to_leader": 75.172, "meeting_key": 1250, "number_of_laps": 50, "points": 0.0, "position": 14, "session_key": 9644}
+{"dnf": false, "dns": false, "driver_number": 18, "dsq": false, "duration": 5010.071, "gap_to_leader": 84.102, "meeting_key": 1250, "number_of_laps": 50, "points": 0.0, "position": 15, "session_key": 9644}
+{"dnf": false, "dns": false, "driver_number": 30, "dsq": false, "duration": 5016.974, "gap_to_leader": 91.005, "meeting_key": 1250, "number_of_laps": 50, "points": 0.0, "position": 16, "session_key": 9644}
+{"dnf": false, "dns": false, "driver_number": 31, "dsq": false, "duration": null, "gap_to_leader": "+1 LAP", "meeting_key": 1250, "number_of_laps": 49, "points": 0.0, "position": 17, "session_key": 9644}
+{"dnf": false, "dns": false, "driver_number": 77, "dsq": false, "duration": null, "gap_to_leader": "+1 LAP", "meeting_key": 1250, "number_of_laps": 49, "points": 0.0, "position": 18, "session_key": 9644}
+{"dnf": true, "dns": false, "driver_number": 23, "dsq": false, "duration": null, "gap_to_leader": null, "meeting_key": 1250, "number_of_laps": 25, "points": 0.0, "position": null, "session_key": 9644}
+{"dnf": true, "dns": false, "driver_number": 10, "dsq": false, "duration": null, "gap_to_leader": null, "meeting_key": 1250, "number_of_laps": 15, "points": 0.0, "position": null, "session_key": 9644}

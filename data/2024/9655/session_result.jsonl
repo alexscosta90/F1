@@ -1,0 +1,20 @@
+{"dnf": false, "dns": false, "driver_number": 1, "dsq": false, "duration": 5465.323, "gap_to_leader": 0, "meeting_key": 1251, "number_of_laps": 57, "points": 25.0, "position": 1, "session_key": 9655}
+{"dnf": false, "dns": false, "driver_number": 16, "dsq": false, "duration": 5471.354, "gap_to_leader": 6.031, "meeting_key": 1251, "number_of_laps": 57, "points": 18.0, "position": 2, "session_key": 9655}
+{"dnf": false, "dns": false, "driver_number": 81, "dsq": false, "duration": 5472.142, "gap_to_leader": 6.819, "meeting_key": 1251, "number_of_laps": 57, "points": 15.0, "position": 3, "session_key": 9655}
+{"dnf": false, "dns": false, "driver_number": 63, "dsq": false, "duration": 5479.427, "gap_to_leader": 14.104, "meeting_key": 1251, "number_of_laps": 57, "points": 12.0, "position": 4, "session_key": 9655}
+{"dnf": false, "dns": false, "driver_number": 10, "dsq": false, "duration": 5482.105, "gap_to_leader": 16.782, "meeting_key": 1251, "number_of_laps": 57, "points": 10.0, "position": 5, "session_key": 9655}
+{"dnf": false, "dns": false, "driver_number": 55, "dsq": false, "duration": 5482.799, "gap_to_leader": 17.476, "meeting_key": 1251, "number_of_laps": 57, "points": 8.0, "position": 6, "session_key": 9655}
+{"dnf": false, "dns": false, "driver_number": 14, "dsq": false, "duration": 5485.19, "gap_to_leader": 19.867, "meeting_key": 1251, "number_of_laps": 57, "points": 6.0, "position": 7, "session_key": 9655}
+{"dnf": false, "dns": false, "driver_number": 24, "dsq": false, "duration": 5490.683, "gap_to_leader": 25.36, "meeting_key": 1251, "number_of_laps": 57, "points": 4.0, "position": 8, "session_key": 9655}
+{"dnf": false, "dns": false, "driver_number": 20, "dsq": false, "duration": 5497.5, "gap_to_leader": 32.177, "meeting_key": 1251, "number_of_laps": 57, "points": 2.0, "position": 9, "session_key": 9655}
+{"dnf": false, "dns": false, "driver_number": 4, "dsq": false, "duration": 5501.085, "gap_to_leader": 35.762, "meeting_key": 1251, "number_of_laps": 57, "points": 2.0, "position": 10, "session_key": 9655}
+{"dnf": false, "dns": false, "driver_number": 77, "dsq": false, "duration": 5515.566, "gap_to_leader": 50.243, "meeting_key": 1251, "number_of_laps": 57, "points": 0.0, "position": 11, "session_key": 9655}
+{"dnf": false, "dns": false, "driver_number": 44, "dsq": false, "duration": 5521.445, "gap_to_leader": 56.122, "meeting_key": 1251, "number_of_laps": 57, "points": 0.0, "position": 12, "session_key": 9655}
+{"dnf": false, "dns": false, "driver_number": 22, "dsq": false, "duration": 5526.423, "gap_to_leader": 61.1, "meeting_key": 1251, "number_of_laps": 57, "points": 0.0, "position": 13, "session_key": 9655}
+{"dnf": false, "dns": false, "driver_number": 30, "dsq": false, "duration": 5527.979, "gap_to_leader": 62.656, "meeting_key": 1251, "number_of_laps": 57, "points": 0.0, "position": 14, "session_key": 9655}
+{"dnf": false, "dns": false, "driver_number": 23, "dsq": false, "duration": null, "gap_to_leader": "+1 LAP", "meeting_key": 1251, "number_of_laps": 56, "points": 0.0, "position": 15, "session_key": 9655}
+{"dnf": true, "dns": false, "driver_number": 27, "dsq": false, "duration": null, "gap_to_leader": null, "meeting_key": 1251, "number_of_laps": 39, "points": 0.0, "position": null, "session_key": 9655}
+{"dnf": true, "dns": false, "driver_number": 11, "dsq": false, "duration": null, "gap_to_leader": null, "meeting_key": 1251, "number_of_laps": 38, "points": 0.0, "position": null, "session_key": 9655}
+{"dnf": true, "dns": false, "driver_number": 18, "dsq": false, "duration": null, "gap_to_leader": null, "meeting_key": 1251, "number_of_laps": 8, "points": 0.0, "position": null, "session_key": 9655}
+{"dnf": true, "dns": false, "driver_number": 43, "dsq": false, "duration": null, "gap_to_leader": null, "meeting_key": 1251, "number_of_laps": 0, "points": 0.0, "position": null, "session_key": 9655}
+{"dnf": true, "dns": false, "driver_number": 31, "dsq": false, "duration": null, "gap_to_leader": null, "meeting_key": 1251, "number_of_laps": 0, "points": 0.0, "position": null, "session_key": 9655}
