@@ -2,6 +2,8 @@
 
 Pipeline local em Python para descobrir etapas e sessões da Fórmula 1 e coletar resultados, pilotos, voltas, grid e stints da API histórica OpenF1.
 
+🚀 [Acesse o dashboard interativo](https://alexformula1.streamlit.app/)
+
 ## Requisitos
 
 - Python 3.12 (faixa suportada: `>=3.12,<3.13`)
@@ -61,3 +63,4 @@ poetry run dashboard
 ```
 
 As seis páginas são Dashboard executivo, Corridas, Pilotos, Equipes, Voltas e Resultados. Os filtros incluem ano, Grande Prêmio, tipo de sessão, equipe e piloto. O catálogo online é salvo localmente para manter os nomes oficiais no modo Offline. Veja o [guia do dashboard e deploy](docs/dashboard.md).
+
