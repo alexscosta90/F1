@@ -17,31 +17,39 @@ from urllib.request import Request, urlopen
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+from pandas.io.formats.style import Styler
 
 from f1.config import Settings
+from f1.dashboard_analytics import (
+    best_lap_comparison,
+    best_laps,
+    classification_table,
+    filter_driver_rows,
+    ordered_results,
+    position_history,
+    positive_numeric_values,
+    stint_timeline,
+    valid_laps,
+)
 from f1.dashboard_data import available_years, load_season
 from f1.dashboard_repository import FileRepository, OpenF1Repository
 from f1.dashboard_service import DashboardService
+from f1.dashboard_theme import (
+    BACKGROUND,
+    BORDER,
+    CHART_COLORS,
+    GRID,
+    MUTED_TEXT,
+    SURFACE,
+    TEAM_COLORS,
+    TEXT,
+)
 from f1.ingestion.client import OpenF1Client, OpenF1Error
 
 st.set_page_config(
     page_title="F1 | Race intelligence", page_icon=":material/speed:", layout="wide"
 )
 
-TEAM_FALLBACK_COLORS = {
-    "ferrari": "#e8002d",
-    "mercedes": "#00d2be",
-    "mclaren": "#ff8000",
-    "red bull": "#3671c6",
-    "aston martin": "#229971",
-    "williams": "#64c4ff",
-    "alpine": "#ff87bc",
-    "haas": "#b6babd",
-    "rb": "#6692ff",
-    "racing bulls": "#6692ff",
-    "kick sauber": "#52e252",
-    "sauber": "#52e252",
-}
 PAGES = [
     "Dashboard executivo",
     "Corridas",
@@ -192,15 +200,67 @@ def _team_names(drivers: pd.DataFrame) -> dict[int, str]:
 
 
 def _team_colors(drivers: pd.DataFrame) -> dict[str, str]:
-    colors = dict(TEAM_FALLBACK_COLORS)
+    colors = {
+        key: color
+        for name, color in TEAM_COLORS.items()
+        for key in (name, name.casefold())
+    }
     for row in drivers.to_dict("records") if not drivers.empty else []:
-        if isinstance(row.get("team_name"), str) and isinstance(
-            row.get("team_colour"), str
-        ):
-            colors[row["team_name"].lower()] = (
-                f"#{row['team_colour'].removeprefix('#')}"
-            )
+        name, colour = row.get("team_name"), row.get("team_colour")
+        known_team = isinstance(name, str) and name.casefold() in {
+            team.casefold() for team in TEAM_COLORS
+        }
+        if isinstance(name, str) and isinstance(colour, str) and not known_team:
+            normalized = colour.removeprefix("#")
+            if len(normalized) == 6 and all(
+                character in "0123456789abcdefABCDEF" for character in normalized
+            ):
+                colors[name] = f"#{normalized}"
+                colors[name.casefold()] = f"#{normalized}"
     return colors
+
+
+def _styled_team_table(
+    frame: pd.DataFrame, drivers: pd.DataFrame
+) -> pd.DataFrame | Styler:
+    """Add a narrow team-color marker without changing any table values."""
+    if "Team" not in frame:
+        return frame
+    colors = _team_colors(drivers)
+
+    def marker(value: object) -> str:
+        color = colors.get(str(value), colors.get(str(value).casefold(), MUTED_TEXT))
+        return f"border-left: 3px solid {color}; padding-left: 8px;"
+
+    return frame.style.map(marker, subset=["Team"])
+
+
+def _classification_column_config() -> dict[str, object]:
+    """Configure compact display widths while retaining formatted values."""
+    config: dict[str, object] = {
+        "Position": st.column_config.NumberColumn(
+            "Posição", format="%d", width="small", pinned=True
+        ),
+        "Pilot": st.column_config.TextColumn("Piloto", width="medium", pinned=True),
+        "Team": st.column_config.TextColumn("Equipe", width="small"),
+    }
+    for column in (
+        "Tempo total",
+        "Melhor volta",
+        "Diferença",
+        "Q1",
+        "Q2",
+        "Q3",
+        "Delta Q1",
+        "Delta Q2",
+        "Delta Q3",
+        "Voltas",
+        "Situação",
+    ):
+        config[column] = st.column_config.TextColumn(
+            column, width="small", alignment="right"
+        )
+    return config
 
 
 def _display_driver(value: object, names: dict[int, str]) -> str:
@@ -270,18 +330,49 @@ def _context() -> dict[str, object]:
 def _plot(fig, alt: str) -> None:
     fig.update_layout(
         template="plotly_dark",
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
-        transition_duration=350,
-        margin={"l": 12, "r": 12, "t": 54, "b": 12},
+        colorway=CHART_COLORS,
+        paper_bgcolor=BACKGROUND,
+        plot_bgcolor=BACKGROUND,
+        font={"family": "Inter, Segoe UI, sans-serif", "size": 12, "color": TEXT},
+        title={"font": {"size": 18, "color": TEXT}, "x": 0, "xanchor": "left"},
+        legend={
+            "orientation": "h",
+            "y": -0.22,
+            "x": 0,
+            "xanchor": "left",
+            "yanchor": "top",
+            "font": {"size": 10, "color": MUTED_TEXT},
+            "bgcolor": "rgba(0,0,0,0)",
+            "borderwidth": 0,
+        },
+        hoverlabel={"bgcolor": SURFACE, "bordercolor": BORDER, "font": {"color": TEXT}},
+        autosize=True,
+        margin={"l": 20, "r": 20, "t": 58, "b": 66},
+    )
+    fig.update_xaxes(
+        gridcolor=GRID,
+        linecolor=BORDER,
+        tickfont={"color": MUTED_TEXT, "size": 10},
+        title_font={"color": MUTED_TEXT, "size": 11},
+        zeroline=False,
+    )
+    fig.update_yaxes(
+        gridcolor=GRID,
+        linecolor=BORDER,
+        tickfont={"color": MUTED_TEXT, "size": 10},
+        title_font={"color": MUTED_TEXT, "size": 11},
+        zeroline=False,
     )
     st.plotly_chart(fig, width="stretch", config={"displayModeBar": False}, alt=alt)
 
 
 def _metrics(items: list[tuple[str, object]]) -> None:
-    with st.container(horizontal=True):
-        for label, value in items:
-            st.metric(label, value, border=True)
+    for start in range(0, len(items), 4):
+        columns = st.columns(min(4, len(items) - start))
+        for column, (label, value) in zip(
+            columns, items[start : start + 4], strict=True
+        ):
+            column.metric(label, value, border=True)
 
 
 def _load(endpoints: tuple[str, ...]) -> dict[str, pd.DataFrame]:
@@ -341,16 +432,20 @@ def _selected_data() -> tuple[
     outputs = []
     for endpoint in ("laps", "session_result", "stints"):
         frame = data.get(endpoint, pd.DataFrame()).copy()
-        if selected and "driver_number" in frame:
-            frame = frame[frame["driver_number"].isin(selected)]
+        frame = filter_driver_rows(frame, selected)
+        if endpoint == "laps":
+            frame = valid_laps(frame)
+        elif endpoint == "session_result":
+            frame = ordered_results(frame)
         outputs.append(frame)
     return data, *outputs
 
 
 def _winner(results: pd.DataFrame, names: dict[int, str]) -> str:
-    if results.empty or "position" not in results:
+    ranked = ordered_results(results)
+    if ranked.empty:
         return "—"
-    first = results[pd.to_numeric(results["position"], errors="coerce") == 1]
+    first = ranked[ranked["position"] == 1]
     return (
         _display_driver(first.iloc[0].get("driver_number"), names)
         if not first.empty
@@ -359,7 +454,7 @@ def _winner(results: pd.DataFrame, names: dict[int, str]) -> str:
 
 
 def _named_results(results: pd.DataFrame, drivers: pd.DataFrame) -> pd.DataFrame:
-    public = results.copy()
+    public = ordered_results(results)
     names, teams = _driver_names(drivers), _team_names(drivers)
     if "driver_number" in public:
         public["Pilot"] = public["driver_number"].map(
@@ -372,28 +467,70 @@ def _named_results(results: pd.DataFrame, drivers: pd.DataFrame) -> pd.DataFrame
     return public
 
 
-def _results_chart(results: pd.DataFrame, drivers: pd.DataFrame, title: str) -> None:
-    if results.empty or "position" not in results:
+def _best_lap_chart(
+    laps: pd.DataFrame, drivers: pd.DataFrame, title: str, limit: int | None = None
+) -> None:
+    """Plot each driver's validated best lap once, ordered by exact lap time."""
+    comparison = best_lap_comparison(laps, _driver_names(drivers), _team_names(drivers))
+    if comparison.empty:
+        st.info("Não há melhores voltas válidas para comparar nesta sessão.")
         return
-    public = (
-        _named_results(results, drivers)
-        .dropna(subset=["Position"])
-        .sort_values("Position")
-        .head(10)
+    if limit is not None:
+        comparison = comparison.head(limit)
+    comparison = comparison.sort_values("best_lap", kind="stable")
+    order = comparison["Pilot"].tolist()
+    low, high = comparison["best_lap"].min(), comparison["best_lap"].max()
+    padding = max((high - low) * 0.08, 0.25)
+    colors = _team_colors(drivers)
+    team_colors = {
+        team: colors.get(team, colors.get(team.casefold(), "#8a8f98"))
+        for team in comparison["Team"].unique()
+    }
+    figure = px.scatter(
+        comparison,
+        x="best_lap",
+        y="Pilot",
+        color="Team",
+        custom_data=["Team", "time_label", "delta_label"],
+        category_orders={"Pilot": order},
+        color_discrete_map=team_colors,
+        title=title,
+        labels={"best_lap": "Melhor volta (s; escala ampliada)"},
     )
-    if not public.empty:
-        _plot(
-            px.bar(
-                public[["Pilot", "Team", "Position"]],
-                x="Pilot",
-                y="Position",
-                color="Team",
-                color_discrete_map=_team_colors(drivers),
-                text="Position",
-                title=f"Classificação · {title}",
-            ).update_yaxes(autorange="reversed"),
-            f"Classificação de pilotos em {title}",
-        )
+    figure.update_traces(
+        marker={"size": 11},
+        hovertemplate=(
+            "<b>%{y}</b><br>Equipe: %{customdata[0]}"
+            "<br>Tempo: %{customdata[1]}<br>Delta: %{customdata[2]}<extra></extra>"
+        ),
+    )
+    figure.update_xaxes(range=[max(0, low - padding), high + padding], tickformat=".3f")
+    figure.update_yaxes(
+        categoryorder="array", categoryarray=order, autorange="reversed"
+    )
+    _plot(figure, f"Melhores voltas individuais em {title}, ordenadas da mais rápida")
+
+
+def _results_chart(
+    results: pd.DataFrame, drivers: pd.DataFrame, title: str, session_type: str
+) -> None:
+    public = classification_table(
+        results, _driver_names(drivers), _team_names(drivers), session_type
+    )
+    if public.empty:
+        return
+    st.subheader(f"Classificação oficial · {title} · {session_type}")
+    st.dataframe(
+        _styled_team_table(public, drivers),
+        hide_index=True,
+        height=min(640, 36 * (len(public) + 1) + 3),
+        column_config={
+            name: config
+            for name, config in _classification_column_config().items()
+            if name in public
+        },
+        alt=f"Classificação oficial de {session_type} em {title}, da P1 em diante",
+    )
 
 
 def _speed_max(laps: pd.DataFrame) -> float | None:
@@ -401,9 +538,7 @@ def _speed_max(laps: pd.DataFrame) -> float | None:
         column for column in ("i1_speed", "i2_speed", "st_speed") if column in laps
     ]
     values = (
-        pd.concat(
-            [pd.to_numeric(laps[column], errors="coerce") for column in columns]
-        ).dropna()
+        pd.concat([positive_numeric_values(laps[column]) for column in columns])
         if columns
         else pd.Series(dtype=float)
     )
@@ -452,65 +587,13 @@ def _executive() -> None:
     context = _context()
     data, laps, results, _ = _selected_data()
     drivers = data.get("drivers", pd.DataFrame())
-    race_sessions = context["sessions"]
-    race_sessions = race_sessions[race_sessions["session_type"] == "Race"]
-    if context["source"] == "Offline":
-        root = Path(str(context["data_dir"])) / str(context["year"])
-        fingerprint = tuple(
-            sorted(
-                (str(path), path.stat().st_mtime_ns) for path in root.rglob("*.jsonl")
-            )
-        )
-        season = _offline_season(
-            str(context["data_dir"]), int(context["year"]), fingerprint
-        )
-        race_keys = race_sessions["session_key"].dropna().tolist()
-        laps = season.get("laps", pd.DataFrame())
-        results = season.get("session_result", pd.DataFrame())
-        if "session_key" in laps:
-            laps = laps[laps["session_key"].isin(race_keys)]
-        if "session_key" in results:
-            results = results[results["session_key"].isin(race_keys)]
-        drivers = season.get("drivers", drivers)
-        if not results.empty and {"position", "driver_number"}.issubset(
-            results.columns
-        ):
-            point_values = {
-                1: 25,
-                2: 18,
-                3: 15,
-                4: 12,
-                5: 10,
-                6: 8,
-                7: 6,
-                8: 4,
-                9: 2,
-                10: 1,
-            }
-            point_rows = results.copy()
-            point_rows["_points"] = (
-                pd.to_numeric(point_rows["position"], errors="coerce")
-                .map(point_values)
-                .fillna(0)
-            )
-            team_map = _team_names(drivers)
-            point_rows["_team"] = point_rows["driver_number"].map(
-                lambda value: team_map.get(_as_int(value), "Unknown team")
-            )
-            context["season_driver_leader"] = (
-                point_rows.groupby("driver_number")["_points"].sum().idxmax()
-            )
-            context["season_team_leader"] = (
-                point_rows.groupby("_team")["_points"].sum().idxmax()
-            )
     names = _driver_names(drivers)
     durations = (
-        pd.to_numeric(laps.get("lap_duration"), errors="coerce")
+        positive_numeric_values(laps["lap_duration"])
         if "lap_duration" in laps
         else pd.Series(dtype=float)
     )
-    valid = durations.dropna()
-    fastest_time = float(valid.min()) if not valid.empty else None
+    fastest_time = float(durations.min()) if not durations.empty else None
     speed = _speed_max(laps)
     sessions = context["sessions"]
     race_count = int(
@@ -518,74 +601,173 @@ def _executive() -> None:
     )
     champ_drivers = data.get("championship_drivers", pd.DataFrame())
     champ_teams = data.get("championship_teams", pd.DataFrame())
-    leader = _winner(results, names)
+    leader = "—"
+    if not champ_drivers.empty and {"position_current", "driver_number"}.issubset(
+        champ_drivers.columns
+    ):
+        champ_drivers = champ_drivers.copy()
+        champ_drivers["position_current"] = pd.to_numeric(
+            champ_drivers["position_current"], errors="coerce"
+        )
+        champ_drivers = champ_drivers.dropna(subset=["position_current"]).sort_values(
+            "position_current", kind="stable"
+        )
     if not champ_drivers.empty and "position_current" in champ_drivers:
-        row = champ_drivers.sort_values("position_current").iloc[0]
+        row = champ_drivers.iloc[0]
         leader = _display_driver(row.get("driver_number"), names)
     team = "—"
-    if not champ_teams.empty and "position_current" in champ_teams:
-        team = str(
-            champ_teams.sort_values("position_current").iloc[0].get("team_name") or "—"
+    if not champ_teams.empty and {"position_current", "team_name"}.issubset(
+        champ_teams.columns
+    ):
+        champ_teams = champ_teams.copy()
+        champ_teams["position_current"] = pd.to_numeric(
+            champ_teams["position_current"], errors="coerce"
         )
-    elif context.get("season_driver_leader") is not None:
-        leader = _display_driver(context["season_driver_leader"], names)
-        team = str(context.get("season_team_leader") or "—")
-    elif leader != "—" and not results.empty:
-        first = (
-            results[pd.to_numeric(results["position"], errors="coerce") == 1]
-            if "position" in results
-            else pd.DataFrame()
+        champ_teams = champ_teams.dropna(subset=["position_current"]).sort_values(
+            "position_current", kind="stable"
         )
-        team = (
-            _team_names(drivers).get(_as_int(first.iloc[0].get("driver_number")), "—")
-            if not first.empty
-            else "—"
-        )
-    scope = "temporada" if context["source"] == "Offline" else str(context["gp_name"])
-    st.caption(
-        f"Voltas, velocidade e liderança calculadas para {scope}. "
-        "A fonte online atualiza a cada minuto."
+        if not champ_teams.empty:
+            team = str(champ_teams.iloc[0].get("team_name") or "—")
+    fastest = best_laps(laps)
+    fastest_driver = (
+        _display_driver(fastest.iloc[0]["driver_number"], names)
+        if not fastest.empty
+        else "?"
     )
+    grid = ordered_results(_session_grid(context))
+    pole_rows = grid.loc[grid["position"] == 1] if "position" in grid else grid
+    pole = (
+        _display_driver(pole_rows.iloc[0].get("driver_number"), names)
+        if not pole_rows.empty
+        else "Indisponivel"
+    )
+    is_race = context["session_type"] == "Race"
     _metrics(
         [
-            ("Grandes Prêmios", race_count),
+            ("Vencedor" if is_race else "P1 oficial", _winner(results, names)),
             (
-                "Pilotos na sessão",
-                drivers["driver_number"].nunique() if "driver_number" in drivers else 0,
+                "Pole position" if is_race else "Sess?o",
+                pole if is_race else context["session_label"],
             ),
-            (
-                "Volta mais rápida",
-                f"{fastest_time:.3f} s" if fastest_time is not None else "—",
-            ),
-            ("Maior velocidade", f"{speed:.0f} km/h" if speed is not None else "—"),
-            ("Piloto líder", leader),
-            ("Equipe líder", team),
-            ("Sessões", len(sessions)),
+            ("Volta mais rapida", fastest_driver),
         ]
     )
-    if fastest_time is not None:
-        top = (
-            laps.assign(_time=durations)
-            .dropna(subset=["_time"])
-            .nsmallest(10, "_time")
-            .copy()
+    st.caption(
+        f"Melhor tempo valido: {fastest_time:.3f} s. "
+        "Atualizacao por minuto no modo Online."
+        if fastest_time is not None
+        else "Melhor tempo indispon?vel nesta sessao."
+    )
+    with st.expander("Indicadores da sessao e da temporada", expanded=False):
+        _metrics(
+            [
+                ("GPs na temporada", race_count),
+                (
+                    "Pilotos na sessão",
+                    drivers["driver_number"].nunique()
+                    if "driver_number" in drivers
+                    else 0,
+                ),
+                (
+                    "Volta mais rápida na sessão",
+                    f"{fastest_time:.3f} s" if fastest_time is not None else "—",
+                ),
+                (
+                    "Maior velocidade na sessão",
+                    f"{speed:.0f} km/h" if speed is not None else "—",
+                ),
+                ("Líder do campeonato", leader),
+                ("Equipe líder", team),
+                ("Sessões na temporada", sessions["session_key"].nunique()),
+            ]
         )
-        top["Pilot"] = top["driver_number"].map(
-            lambda value: _display_driver(value, names)
+    season_tab, session_tab = st.tabs(["Destaques da temporada", "Resultado da sessao"])
+    with season_tab:
+        _season_leaders(champ_drivers, drivers, context)
+    with session_tab:
+        _results_chart(
+            results, drivers, str(context["gp_name"]), str(context["session_type"])
         )
-        _plot(
-            px.bar(
-                top[["_time", "Pilot"]],
-                x="_time",
-                y="Pilot",
-                orientation="h",
-                title="Voltas mais rápidas da sessão",
-                labels={"_time": "Tempo (s)"},
-                color_discrete_sequence=["#e10600"],
-            ).update_yaxes(categoryorder="total ascending"),
-            "As dez voltas mais rápidas da sessão selecionada",
+        _best_lap_chart(
+            laps, drivers, "Melhor volta valida por piloto - sessao selecionada", 10
         )
-    _results_chart(results, drivers, str(context["gp_name"]))
+
+
+def _season_leaders(
+    standings: pd.DataFrame, drivers: pd.DataFrame, context: dict[str, object]
+) -> None:
+    st.subheader(f"Os protagonistas de {context['year']}")
+    st.caption(
+        f"Campeonato de pilotos ate {context['gp_name']} - "
+        "posicoes e pontos oficiais da etapa selecionada. "
+        "Este painel mostra o campeonato completo, sem o filtro de equipe/piloto."
+    )
+    required = {"driver_number", "position_current", "points_current"}
+    if standings.empty or not required.issubset(standings.columns):
+        st.info(
+            "Classificacao da temporada indisponivel nesta fonte ou sessao. "
+            "Selecione uma corrida com dados oficiais de campeonato. "
+            "Os resultados da sessao continuam na aba ao lado.",
+            icon=":material/leaderboard:",
+        )
+        return
+    ranking = standings.copy()
+    for column in ("position_current", "points_current", "driver_number"):
+        ranking[column] = pd.to_numeric(ranking[column], errors="coerce")
+    ranking = ranking.dropna(subset=list(required))
+    ranking = ranking.loc[
+        (ranking["position_current"] > 0) & (ranking["points_current"] >= 0)
+    ].sort_values("position_current", kind="stable")
+    ranking = ranking.drop_duplicates("driver_number", keep="first")
+    if ranking.empty:
+        st.info("Nao ha posicoes e pontos validos para apresentar o campeonato.")
+        return
+    names, teams = _driver_names(drivers), _team_names(drivers)
+    ranking["Pilot"] = ranking["driver_number"].map(
+        lambda number: _display_driver(number, names)
+    )
+    ranking["Team"] = ranking["driver_number"].map(teams).fillna("Equipe indisponivel")
+    for column, (_, row) in zip(
+        st.columns(min(3, len(ranking))), ranking.head(3).iterrows(), strict=True
+    ):
+        with column, st.container(border=True):
+            st.caption(f"P{int(row['position_current'])} / CAMPEONATO")
+            st.subheader(row["Pilot"])
+            st.caption(row["Team"])
+            st.metric("Pontos oficiais", f"{row['points_current']:g}")
+    limit = st.segmented_control(
+        "Pilotos no ranking",
+        ["Top 10", "Todos"],
+        default="Top 10",
+        key="executive_ranking_limit",
+    )
+    visible = ranking.head(10) if limit != "Todos" else ranking
+    figure = px.bar(
+        visible,
+        x="points_current",
+        y="Pilot",
+        color="Team",
+        orientation="h",
+        text="points_current",
+        custom_data=["position_current", "Team"],
+        category_orders={"Pilot": visible["Pilot"].tolist()},
+        color_discrete_map=TEAM_COLORS,
+        title="A disputa pelo campeonato",
+        labels={
+            "points_current": "Pontos oficiais",
+            "Pilot": "Piloto",
+            "Team": "Equipe",
+        },
+    )
+    figure.update_traces(
+        textposition="outside",
+        cliponaxis=False,
+        hovertemplate=(
+            "P%{customdata[0]} - %{y}<br>%{customdata[1]}<br>%{x} pontos<extra></extra>"
+        ),
+    )
+    figure.update_layout(height=max(400, 30 * len(visible) + 150))
+    _plot(figure, "Ranking oficial de pilotos por pontos, na ordem do campeonato")
 
 
 def _races() -> None:
@@ -596,19 +778,15 @@ def _races() -> None:
     grid = _session_grid(context)
     pole = "—"
     if not grid.empty and "position" in grid:
-        row = grid[pd.to_numeric(grid["position"], errors="coerce") == 1]
+        grid = ordered_results(grid)
+        row = grid[grid["position"] == 1]
         if not row.empty:
             pole = _display_driver(row.iloc[0].get("driver_number"), names)
-    duration = (
-        pd.to_numeric(laps.get("lap_duration"), errors="coerce")
-        if "lap_duration" in laps
-        else pd.Series(dtype=float)
-    )
-    valid = duration.dropna()
+    fastest_laps = best_laps(laps)
     fastest = (
-        f"{_display_driver(laps.loc[duration.idxmin()].get('driver_number'), names)} · "
-        f"{valid.min():.3f} s"
-        if not valid.empty
+        f"{_display_driver(fastest_laps.iloc[0]['driver_number'], names)} · "
+        f"{fastest_laps.iloc[0]['best_lap']:.3f} s"
+        if not fastest_laps.empty
         else "—"
     )
     speed = _speed_max(laps)
@@ -620,26 +798,25 @@ def _races() -> None:
             ("Velocidade máxima", f"{speed:.0f} km/h" if speed is not None else "—"),
         ]
     )
-    _results_chart(results, drivers, str(context["gp_name"]))
+    _results_chart(
+        results, drivers, str(context["gp_name"]), str(context["session_type"])
+    )
     positions = data.get("position", pd.DataFrame())
-    if not positions.empty and {"date", "position", "driver_number"}.issubset(
-        positions.columns
-    ):
-        positions = positions.copy()
-        positions["Position"] = pd.to_numeric(positions["position"], errors="coerce")
-        positions["Pilot"] = positions["driver_number"].map(
+    evolution = position_history(positions)
+    if not evolution.empty:
+        evolution["Pilot"] = evolution["driver_number"].map(
             lambda value: _display_driver(value, names)
         )
-        evolution = positions[["date", "Position", "Pilot"]].dropna(subset=["Position"])
         _plot(
             px.line(
-                evolution.sort_values("date"),
+                evolution,
                 x="date",
-                y="Position",
+                y="position",
                 color="Pilot",
-                title="Evolução da corrida",
-            ).update_yaxes(autorange="reversed"),
-            "Evolução das posições ao longo da corrida",
+                title="Evolução da posição oficial na sessão",
+                labels={"date": "Horário (UTC)", "position": "Posição"},
+            ).update_yaxes(autorange="reversed", dtick=1),
+            "Evolução das posições oficiais ao longo da sessão",
         )
 
 
@@ -650,32 +827,17 @@ def _drivers_page() -> None:
         st.info("Não há voltas disponíveis nesta sessão.")
         return
     names, teams = _driver_names(drivers), _team_names(drivers)
-    valid = laps.copy()
-    valid["lap_duration"] = pd.to_numeric(valid["lap_duration"], errors="coerce")
-    valid = valid.dropna(subset=["lap_duration"])
-    summary = valid.groupby("driver_number", as_index=False).agg(
-        best_lap=("lap_duration", "min"),
-        average_lap=("lap_duration", "mean"),
-        laps=("lap_duration", "count"),
-    )
+    valid = valid_laps(laps)
+    summary = best_laps(valid)
+    if summary.empty:
+        st.info("Não há voltas válidas para comparar nesta sessão.")
+        return
     summary["Pilot"] = summary["driver_number"].map(
         lambda value: _display_driver(value, names)
     )
     summary["Team"] = summary["driver_number"].map(
         lambda value: teams.get(_as_int(value), "Unknown team")
     )
-    speed_columns = [
-        column for column in ("i1_speed", "i2_speed", "st_speed") if column in valid
-    ]
-    if speed_columns:
-        speed_rows = valid.melt(
-            id_vars=["driver_number"],
-            value_vars=speed_columns,
-            value_name="speed",
-        )
-        speed_rows["speed"] = pd.to_numeric(speed_rows["speed"], errors="coerce")
-        average_speed = speed_rows.groupby("driver_number")["speed"].mean()
-        summary["average_speed"] = summary["driver_number"].map(average_speed)
     _plot(
         px.scatter(
             summary[
@@ -699,7 +861,9 @@ def _drivers_page() -> None:
             color_discrete_map=_team_colors(drivers),
             title="Ritmo médio e melhor volta",
             labels={"average_lap": "Tempo médio (s)", "best_lap": "Melhor volta (s)"},
-        ),
+        )
+        .update_xaxes(tickformat=".3f")
+        .update_yaxes(tickformat=".3f"),
         "Comparação de ritmo e melhores voltas entre pilotos",
     )
     if not results.empty and "position" in results:
@@ -714,16 +878,37 @@ def _drivers_page() -> None:
         ]
     )
     st.dataframe(
-        summary.drop(columns="driver_number"),
+        _styled_team_table(summary.drop(columns="driver_number"), drivers),
         hide_index=True,
+        column_config={
+            name: config
+            for name, config in {
+                "Pilot": st.column_config.TextColumn(
+                    "Piloto", width="medium", pinned=True
+                ),
+                "Team": st.column_config.TextColumn("Equipe", width="small"),
+                "average_lap": st.column_config.NumberColumn(
+                    "Tempo médio (s)", format="%.3f", width="small"
+                ),
+                "best_lap": st.column_config.NumberColumn(
+                    "Melhor volta (s)", format="%.3f", width="small"
+                ),
+                "laps": st.column_config.NumberColumn(
+                    "Voltas válidas", format="%d", width="small"
+                ),
+                "Finish": st.column_config.NumberColumn(
+                    "Posição final", format="%d", width="small"
+                ),
+            }.items()
+            if name in summary
+        },
         alt="Classificação e ritmo dos pilotos",
     )
 
 
 def _teams_page() -> None:
-    data, laps, results, _ = _selected_data()
+    data, _, _, _ = _selected_data()
     drivers = data.get("drivers", pd.DataFrame())
-    teams = _team_names(drivers)
     championship = data.get("championship_teams", pd.DataFrame())
     if not championship.empty and "team_name" in championship:
         ranking = championship.rename(
@@ -733,9 +918,22 @@ def _teams_page() -> None:
                 "points_current": "Points",
             }
         )
+        if "Position" in ranking:
+            ranking["Position"] = pd.to_numeric(ranking["Position"], errors="coerce")
+            ranking = ranking.dropna(subset=["Position"]).sort_values(
+                "Position", kind="stable"
+            )
+        else:
+            ranking = ranking.sort_values("Team", kind="stable")
         ranking = ranking[
             [column for column in ("Position", "Team", "Points") if column in ranking]
-        ].sort_values("Position" if "Position" in ranking else "Team")
+        ]
+        if "Points" in ranking:
+            ranking["Points"] = pd.to_numeric(ranking["Points"], errors="coerce")
+            ranking = ranking.dropna(subset=["Points"])
+        if ranking.empty or "Points" not in ranking:
+            st.info("A classificação oficial de equipes não tem pontos válidos.")
+            return
         _plot(
             px.bar(
                 ranking,
@@ -743,47 +941,35 @@ def _teams_page() -> None:
                 y="Points",
                 color="Team",
                 color_discrete_map=_team_colors(drivers),
-                title="Classificação atual do campeonato",
+                title="Pontos oficiais no campeonato de equipes",
             ),
             "Classificação atual do campeonato de equipes",
         )
         st.dataframe(
-            ranking, hide_index=True, alt="Classificação do campeonato de equipes"
+            _styled_team_table(ranking, drivers),
+            hide_index=True,
+            column_config={
+                name: config
+                for name, config in {
+                    "Position": st.column_config.NumberColumn(
+                        "Posição", format="%d", width="small", pinned=True
+                    ),
+                    "Team": st.column_config.TextColumn(
+                        "Equipe", width="medium", pinned=True
+                    ),
+                    "Points": st.column_config.NumberColumn(
+                        "Pontos", format="%.0f", width="small"
+                    ),
+                }.items()
+                if name in ranking
+            },
+            alt="Classificação do campeonato de equipes",
         )
         return
-    if results.empty or not {"driver_number", "position"}.issubset(results.columns):
-        st.info("A classificação de equipes ainda não está disponível nesta sessão.")
-        return
-    table = results.copy()
-    table["Team"] = table["driver_number"].map(
-        lambda value: teams.get(_as_int(value), "Unknown team")
+    st.info(
+        "A OpenF1 não forneceu a classificação oficial de equipes para esta sessão. "
+        "Pontos não serão estimados apenas pela posição de chegada."
     )
-    table["Position"] = pd.to_numeric(table["position"], errors="coerce")
-    points = {1: 25, 2: 18, 3: 15, 4: 12, 5: 10, 6: 8, 7: 6, 8: 4, 9: 2, 10: 1}
-    table["Points"] = table["Position"].map(points).fillna(0)
-    ranking = table.groupby("Team", as_index=False).agg(
-        Points=("Points", "sum"), Finishers=("Position", "count")
-    )
-    ranking = ranking.sort_values("Points", ascending=False)
-    _plot(
-        px.bar(
-            ranking,
-            x="Team",
-            y="Points",
-            color="Team",
-            color_discrete_map=_team_colors(drivers),
-            title="Pontos por equipe",
-        ),
-        "Pontuação das equipes nesta sessão",
-    )
-    _metrics(
-        [
-            ("Equipe líder", ranking.iloc[0]["Team"]),
-            ("Pontos", int(ranking.iloc[0]["Points"])),
-            ("Equipes classificadas", len(ranking)),
-        ]
-    )
-    st.dataframe(ranking, hide_index=True, alt="Desempenho das equipes")
 
 
 def _laps_page() -> None:
@@ -792,69 +978,93 @@ def _laps_page() -> None:
     names = _driver_names(drivers)
     if laps.empty or "lap_duration" not in laps:
         st.info("Não há dados de volta nesta sessão.")
-        return
-    valid = laps.copy()
-    valid["lap_duration"] = pd.to_numeric(valid["lap_duration"], errors="coerce")
-    valid = valid.dropna(subset=["lap_duration"])
-    valid["Pilot"] = valid["driver_number"].map(
-        lambda value: _display_driver(value, names)
-    )
-    top = valid.nsmallest(20, "lap_duration")
-    _plot(
-        px.bar(
-            top[["lap_duration", "Pilot"]],
-            x="lap_duration",
-            y="Pilot",
-            orientation="h",
-            title="Voltas mais rápidas",
-            labels={"lap_duration": "Tempo (s)"},
-            color_discrete_sequence=["#e10600"],
-        ).update_yaxes(categoryorder="total ascending"),
-        "As vinte voltas mais rápidas",
-    )
-    _plot(
-        px.histogram(
-            valid[["lap_duration", "Pilot"]],
-            x="lap_duration",
-            nbins=35,
-            title="Distribuição dos tempos de volta",
-            labels={"lap_duration": "Tempo (s)"},
-        ),
-        "Distribuição dos tempos de volta",
-    )
-    sectors = [
-        column
-        for column in ("duration_sector_1", "duration_sector_2", "duration_sector_3")
-        if column in valid
-    ]
-    if sectors:
-        long = valid.melt(
-            id_vars=["Pilot"],
-            value_vars=sectors,
-            var_name="Sector",
-            value_name="Seconds",
-        )
-        long["Seconds"] = pd.to_numeric(long["Seconds"], errors="coerce")
-        heat = long.groupby(["Pilot", "Sector"])["Seconds"].mean().unstack()
-        _plot(
-            px.imshow(
-                heat,
-                aspect="auto",
-                color_continuous_scale="RdYlGn_r",
-                title="Ritmo médio por setor (s)",
-            ),
-            "Mapa de calor dos tempos médios de setor",
-        )
-    if not stints.empty:
-        named = stints.copy()
-        named["Pilot"] = named["driver_number"].map(
+    else:
+        valid = valid_laps(laps)
+        valid["Pilot"] = valid["driver_number"].map(
             lambda value: _display_driver(value, names)
         )
-        public = named.rename(
+        _best_lap_chart(valid, drivers, "Melhor volta válida por piloto", 20)
+        st.caption(
+            "Distribuição e setores usam voltas completas válidas; "
+            "voltas de saída dos boxes foram excluídas."
+        )
+        _plot(
+            px.histogram(
+                valid[["lap_duration", "Pilot"]],
+                x="lap_duration",
+                nbins=35,
+                title="Distribuição dos tempos de volta",
+                labels={"lap_duration": "Tempo (s)"},
+            ).update_xaxes(tickformat=".3f", title_text="Tempo por volta (s)"),
+            "Distribuição dos tempos de volta",
+        )
+        sectors = [
+            column
+            for column in (
+                "duration_sector_1",
+                "duration_sector_2",
+                "duration_sector_3",
+            )
+            if column in valid
+        ]
+        if sectors:
+            long = valid.melt(
+                id_vars=["Pilot"],
+                value_vars=sectors,
+                var_name="Sector",
+                value_name="Seconds",
+            )
+            long["Seconds"] = positive_numeric_values(long["Seconds"]).reindex(
+                long.index
+            )
+            long = long.dropna(subset=["Seconds"])
+            long["Sector"] = (
+                long["Sector"]
+                .str.extract(r"(\d+)$")[0]
+                .map(lambda value: f"Setor {value}")
+            )
+            if long.empty:
+                sectors = []
+        if sectors:
+            heat = long.groupby(["Pilot", "Sector"])["Seconds"].mean().unstack()
+            _plot(
+                px.imshow(
+                    heat,
+                    aspect="auto",
+                    color_continuous_scale="RdYlGn_r",
+                    title="Ritmo médio por setor (s)",
+                    labels={"x": "Setor", "y": "Piloto", "color": "Tempo (s)"},
+                ),
+                "Mapa de calor dos tempos médios de setor",
+            )
+    timeline = stint_timeline(stints, names)
+    if not timeline.empty:
+        if "compound" in timeline:
+            timeline["Tyre"] = timeline["compound"].fillna("Não informado")
+            _plot(
+                px.bar(
+                    timeline,
+                    x="Stint length",
+                    y="Pilot",
+                    base="Start lap",
+                    color="Tyre",
+                    barmode="overlay",
+                    custom_data=["Start lap", "End lap", "stint_number"],
+                    title="Estratégia de pneus por volta",
+                    labels={"Stint length": "Voltas", "Pilot": "Piloto"},
+                )
+                .update_traces(
+                    hovertemplate=(
+                        "%{y}<br>Stint %{customdata[2]} · voltas "
+                        "%{customdata[0]}–%{customdata[1]}"
+                        "<br>Composto: %{fullData.name}<extra></extra>"
+                    )
+                )
+                .update_xaxes(title_text="Volta da corrida"),
+                "Stints e compostos registrados por piloto na sequência real de voltas",
+            )
+        public = timeline.rename(
             columns={
-                "compound": "Tyre",
-                "lap_start": "Start lap",
-                "lap_end": "End lap",
                 "stint_number": "Stint",
                 "tyre_age_at_start": "Tyre age",
             }
@@ -873,17 +1083,46 @@ def _laps_page() -> None:
                 if column in public
             ]
         ]
-        st.dataframe(public, hide_index=True, alt="Stints e compostos de pneus")
+        st.dataframe(
+            public,
+            hide_index=True,
+            column_config={
+                name: config
+                for name, config in {
+                    "Pilot": st.column_config.TextColumn(
+                        "Piloto", width="medium", pinned=True
+                    ),
+                    "Stint": st.column_config.NumberColumn(
+                        "Stint", format="%d", width="small"
+                    ),
+                    "Tyre": st.column_config.TextColumn("Composto", width="small"),
+                    "Start lap": st.column_config.NumberColumn(
+                        "Volta inicial", format="%d", width="small"
+                    ),
+                    "End lap": st.column_config.NumberColumn(
+                        "Volta final", format="%d", width="small"
+                    ),
+                    "Tyre age": st.column_config.NumberColumn(
+                        "Idade inicial do pneu", format="%d", width="small"
+                    ),
+                }.items()
+                if name in public
+            },
+            alt="Stints e compostos de pneus",
+        )
 
 
 def _results_page() -> None:
     context = _context()
     data, _, results, _ = _selected_data()
     drivers = data.get("drivers", pd.DataFrame())
-    _results_chart(results, drivers, str(context["gp_name"]))
+    _results_chart(
+        results, drivers, str(context["gp_name"]), str(context["session_type"])
+    )
     grid = _session_grid(context)
     if not grid.empty and "position" in grid:
-        pole = grid[pd.to_numeric(grid["position"], errors="coerce") == 1]
+        grid = ordered_results(grid)
+        pole = grid[grid["position"] == 1]
         if not pole.empty:
             _metrics(
                 [
@@ -909,7 +1148,18 @@ def _results_page() -> None:
                 lambda value: _display_driver(value, names)
             )
         if "position_current" in ranking:
-            ranking = ranking.sort_values("position_current")
+            ranking["position_current"] = pd.to_numeric(
+                ranking["position_current"], errors="coerce"
+            )
+            ranking = ranking.dropna(subset=["position_current"]).sort_values(
+                "position_current", kind="stable"
+            )
+        identity = "driver_number" if "driver_number" in ranking else "team_name"
+        if identity in ranking:
+            ranking = ranking.drop_duplicates(identity, keep="first")
+        for column in ("points_current", "points_start"):
+            if column in ranking:
+                ranking[column] = pd.to_numeric(ranking[column], errors="coerce")
         rename = {
             "position_current": "Position",
             "points_current": "Points",
@@ -923,8 +1173,35 @@ def _results_page() -> None:
             if column in ranking
         ]
         st.subheader(label)
-        st.dataframe(ranking[columns], hide_index=True, alt=label)
+        table = ranking[columns]
+        table_config = {
+            column: st.column_config.NumberColumn(
+                column,
+                format="%.0f",
+                width="small",
+                pinned=column == "Position",
+            )
+            for column in ("Position", "Points", "Points before round")
+            if column in table
+        }
+        if "Pilot" in table:
+            table_config["Pilot"] = st.column_config.TextColumn(
+                "Piloto", width="medium", pinned=True
+            )
+        if "Team" in table:
+            table_config["Team"] = st.column_config.TextColumn("Equipe", width="medium")
+        st.dataframe(
+            _styled_team_table(table, drivers),
+            hide_index=True,
+            column_config=table_config,
+            alt=label,
+        )
     comparison = _team_season_comparison(context, data)
+    if not comparison.empty:
+        comparison = comparison.copy()
+        comparison["Points"] = pd.to_numeric(comparison["Points"], errors="coerce")
+        comparison = comparison.dropna(subset=["Season", "Team", "Points"])
+        comparison = comparison.drop_duplicates(["Season", "Team"], keep="last")
     if not comparison.empty:
         _plot(
             px.bar(
@@ -1000,27 +1277,48 @@ def _team_season_comparison(
         season = _offline_season(data_dir, season_year, fingerprint)
         catalog = FileRepository(Path(data_dir)).load_catalog(season_year)
         _, season_sessions = _catalog_frames(catalog)
-        race_keys = season_sessions.loc[
-            season_sessions["session_type"] == "Race", "session_key"
-        ].tolist()
-        results = season.get("session_result", pd.DataFrame())
-        drivers = _team_names(season.get("drivers", pd.DataFrame()))
-        if "session_key" in results:
-            results = results[results["session_key"].isin(race_keys)]
-        if results.empty or not {"driver_number", "position"}.issubset(results.columns):
+        races = season_sessions[season_sessions["session_type"] == "Race"].copy()
+        championship = season.get("championship_teams", pd.DataFrame())
+        if (
+            races.empty
+            or championship.empty
+            or not {"session_key", "team_name", "points_current"}.issubset(
+                championship.columns
+            )
+        ):
             continue
-        result_rows = results.copy()
-        result_rows["Team"] = result_rows["driver_number"].map(
-            lambda number, teams=drivers: teams.get(_as_int(number), "Unknown team")
+        if "date_end" not in races:
+            continue
+        races["_date_end"] = pd.to_datetime(
+            races["date_end"], utc=True, errors="coerce"
         )
-        result_rows["Points"] = (
-            pd.to_numeric(result_rows["position"], errors="coerce")
-            .map({1: 25, 2: 18, 3: 15, 4: 12, 5: 10, 6: 8, 7: 6, 8: 4, 9: 2, 10: 1})
-            .fillna(0)
+        races = races.dropna(subset=["_date_end"])
+        if races.empty:
+            continue
+        latest_race_key = _as_int(
+            races.sort_values("_date_end").iloc[-1]["session_key"]
         )
-        team_points = result_rows.groupby("Team", as_index=False)["Points"].sum()
-        team_points["Season"] = str(season_year)
-        rows.extend(team_points.to_dict("records"))
+        if latest_race_key is None:
+            continue
+        championship = championship.copy()
+        championship["session_key"] = pd.to_numeric(
+            championship["session_key"], errors="coerce"
+        )
+        championship["points_current"] = pd.to_numeric(
+            championship["points_current"], errors="coerce"
+        )
+        latest_standings = championship[
+            (championship["session_key"] == latest_race_key)
+            & championship["points_current"].notna()
+        ]
+        rows.extend(
+            {
+                "Season": str(season_year),
+                "Team": standing["team_name"],
+                "Points": standing["points_current"],
+            }
+            for standing in latest_standings.to_dict("records")
+        )
     return pd.DataFrame(rows)
 
 
@@ -1099,6 +1397,7 @@ def main() -> None:
             )
             or "Online"
         )
+        st.caption("Temporada e sessao")
         if mode == "Offline":
             if not offline_years:
                 st.warning(
@@ -1216,25 +1515,26 @@ def main() -> None:
         driver_frame = _frame(driver_rows)
         names = _driver_names(driver_frame)
         teams = _team_names(driver_frame)
-        team_options = ["All teams", *sorted(set(teams.values()))]
-        selected_team = st.selectbox(
-            "Equipe",
-            team_options,
-            format_func=lambda value: (
-                "Todas as equipes" if value == "All teams" else value
-            ),
-        )
-        numbers = [
-            number
-            for number, team in teams.items()
-            if selected_team == "All teams" or team == selected_team
-        ]
-        selected_drivers = st.multiselect(
-            "Piloto",
-            numbers,
-            format_func=lambda number: names.get(number, "Driver"),
-            key="driver_filter",
-        )
+        with st.expander("Equipe e piloto", expanded=False):
+            team_options = ["All teams", *sorted(set(teams.values()))]
+            selected_team = st.selectbox(
+                "Equipe",
+                team_options,
+                format_func=lambda value: (
+                    "Todas as equipes" if value == "All teams" else value
+                ),
+            )
+            numbers = [
+                number
+                for number, team in teams.items()
+                if selected_team == "All teams" or team == selected_team
+            ]
+            selected_drivers = st.multiselect(
+                "Piloto",
+                numbers,
+                format_func=lambda number: names.get(number, "Driver"),
+                key="driver_filter",
+            )
 
     message = st.session_state.pop("_fallback_message", None)
     if message:
@@ -1243,15 +1543,19 @@ def main() -> None:
     current = typed[typed["session_key"] == session_key].iloc[-1]
     grid_key = int(session_key)
     if session_type == "Race":
-        qualifying = sessions[
+        qualifying_sessions = sessions[
             (sessions["meeting_key"] == meeting_key)
-            & sessions["session_type"].isin(["Qualifying", "Sprint Qualifying"])
+            & (sessions["session_type"] == "Qualifying")
         ]
-        grid_key = (
-            _as_int(qualifying.iloc[-1]["session_key"]) or 0
-            if not qualifying.empty
-            else 0
-        )
+        if qualifying_sessions.empty:
+            qualifying_sessions = sessions[
+                (sessions["meeting_key"] == meeting_key)
+                & (sessions["session_type"] == "Sprint Qualifying")
+            ]
+        if not qualifying_sessions.empty:
+            grid_key = _as_int(qualifying_sessions.iloc[-1]["session_key"]) or 0
+        else:
+            grid_key = 0
     st.session_state["_dashboard_context"] = {
         "source": mode,
         "year": int(year),
