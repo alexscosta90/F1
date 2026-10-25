@@ -19,6 +19,37 @@ def available_years(data_dir: Path) -> list[int]:
     )
 
 
+def snapshot_years(data_dir: Path) -> list[int]:
+    """List seasons with session snapshots, excluding catalog-only seasons."""
+    return [
+        year
+        for year in available_years(data_dir)
+        if any(
+            path.parent.name.isdigit()
+            for path in (data_dir / str(year)).glob("*/drivers.jsonl")
+            if path.stat().st_size > 0
+        )
+    ]
+
+
+def session_snapshots(data_dir: Path, year: int) -> dict[int, set[str]]:
+    """Index nonempty local endpoint files by session without using the API."""
+    endpoints = {"drivers", "laps", "session_result", "starting_grid", "stints"}
+    return (
+        {
+            int(path.name): {
+                file.stem
+                for file in path.glob("*.jsonl")
+                if file.stem in endpoints and file.stat().st_size > 0
+            }
+            for path in (data_dir / str(year)).iterdir()
+            if path.is_dir() and path.name.isdigit()
+        }
+        if (data_dir / str(year)).exists()
+        else {}
+    )
+
+
 def _read_jsonl(path: Path) -> Iterator[dict[str, object]]:
     if not path.exists():
         return
