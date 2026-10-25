@@ -2,7 +2,7 @@
 
 Pipeline local em Python para descobrir etapas e sessões da Fórmula 1 e coletar resultados, pilotos, voltas, grid e stints da API histórica OpenF1.
 
-🚀 [Acesse o dashboard interativo](https://alexformula1.streamlit.app/)
+🚀 [Acesse o dashboard interativo] (https://f1alex.streamlit.app/)
 
 ## Requisitos
 
