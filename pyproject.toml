@@ -16,6 +16,7 @@ packages = [{ include = "f1", from = "src" }]
 
 [tool.poetry.group.dev.dependencies]
 ruff = ">=0.11,<1.0"
+taskipy = "^1.14.1"
 
 [tool.poetry.group.test.dependencies]
 pytest = ">=8.0,<9.0"
@@ -58,3 +59,9 @@ fail_under = 50
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.taskipy.tasks]
+format = "ruff format ."
+lint = "ruff check ."
+test = "pytest"
+docs = "mkdocs build --strict"
