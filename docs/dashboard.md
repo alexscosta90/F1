@@ -32,7 +32,9 @@ O dashboard obtém e renova o token de curta duração no servidor. Também acei
 
 ## Deploy
 
-O `Dockerfile` pode ser usado no Render, Railway e Azure App Service. O entrypoint vincula o servidor a `0.0.0.0` e usa a variável `PORT` da plataforma. Configure `OPENF1_USERNAME` e `OPENF1_PASSWORD` como secrets para habilitar dados ao vivo. No Streamlit Community Cloud, publique o repositório, use `poetry run dashboard` como comando e cadastre os secrets nas configurações. Online é o padrão e não depende de volume local persistente; os JSONL locais são fallback opcional.
+O `Dockerfile` pode ser usado no Render, Railway e Azure App Service. O entrypoint vincula o servidor a `0.0.0.0` e usa a variável `PORT` da plataforma.
+
+No Streamlit Community Cloud, selecione `src/f1/dashboard.py` como arquivo principal e escolha **Python 3.12** em **Advanced settings**. O projeto aceita `>=3.12,<3.13`; a versão local acordada é 3.12.7. O arquivo `.python-version` não substitui a seleção de versão feita na configuração do Community Cloud. Se o app já foi criado com outra versão, será necessário anotar o subdomínio e os secrets, excluir o app e implantá-lo novamente com Python 3.12. Cadastre `OPENF1_USERNAME` e `OPENF1_PASSWORD` nos secrets para habilitar dados ao vivo; dados históricos não exigem credenciais. O dashboard Online não depende de volume persistente; os JSONL locais são fallback opcional.
 
 O rate limiter atual é compartilhado entre chamadas do mesmo processo Python. Para escalar horizontalmente, mantenha um único worker ou mova o estado do rate limiter para um backend compartilhado antes de criar réplicas.
 
