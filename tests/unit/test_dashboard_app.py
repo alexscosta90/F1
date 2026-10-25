@@ -14,22 +14,32 @@ def test_offline_dashboard_renders_without_openf1_requests(
     year_dir = tmp_path / "2024"
     catalog = year_dir / "_catalog"
     session = year_dir / "99"
+    previous_session = year_dir / "100"
     catalog.mkdir(parents=True)
     session.mkdir()
+    previous_session.mkdir()
     (catalog / "meetings.jsonl").write_text(
         json.dumps({"meeting_key": 5, "meeting_name": "Monaco Grand Prix"}) + "\n",
         encoding="utf-8",
     )
+    session_catalog = [
+        {
+            "meeting_key": 5,
+            "session_key": 99,
+            "session_name": "Race",
+            "session_type": "Race",
+            "date_start": "2024-12-08T13:00:00Z",
+        },
+        {
+            "meeting_key": 5,
+            "session_key": 100,
+            "session_name": "Race",
+            "session_type": "Race",
+            "date_start": "2024-11-01T13:00:00Z",
+        },
+    ]
     (catalog / "sessions.jsonl").write_text(
-        json.dumps(
-            {
-                "meeting_key": 5,
-                "session_key": 99,
-                "session_name": "Race",
-                "session_type": "Race",
-            }
-        )
-        + "\n",
+        "".join(json.dumps(row) + "\n" for row in session_catalog),
         encoding="utf-8",
     )
     rows = {
@@ -39,7 +49,7 @@ def test_offline_dashboard_renders_without_openf1_requests(
                 "full_name": "Charles Leclerc",
                 "team_name": "Ferrari",
                 "team_colour": "E8002D",
-            }
+            },
         ],
         "laps": [
             {
@@ -47,12 +57,42 @@ def test_offline_dashboard_renders_without_openf1_requests(
                 "driver_number": 16,
                 "lap_duration": 90.2,
                 "i1_speed": 290,
-            }
+            },
         ],
-        "session_result": [{"session_key": 99, "driver_number": 16, "position": 1}],
+        "session_result": [
+            {
+                "session_key": 99,
+                "driver_number": 16,
+                "position": 1,
+                "duration": 90.2,
+                "gap_to_leader": 0,
+                "number_of_laps": 58,
+            },
+        ],
     }
     for endpoint, payload in rows.items():
         (session / f"{endpoint}.jsonl").write_text(
+            "".join(json.dumps(row) + "\n" for row in payload), encoding="utf-8"
+        )
+    for endpoint, payload in {
+        "drivers": [
+            {
+                "driver_number": 44,
+                "full_name": "Lewis Hamilton",
+                "team_name": "Mercedes",
+            }
+        ],
+        "laps": [
+            {
+                "session_key": 100,
+                "driver_number": 44,
+                "lap_duration": 60.0,
+                "i1_speed": 400,
+            }
+        ],
+        "session_result": [{"session_key": 100, "driver_number": 44, "position": 1}],
+    }.items():
+        (previous_session / f"{endpoint}.jsonl").write_text(
             "".join(json.dumps(row) + "\n" for row in payload), encoding="utf-8"
         )
     (session / "manifest.jsonl").write_text(
@@ -86,7 +126,18 @@ def test_offline_dashboard_renders_without_openf1_requests(
 
     assert not app.exception
     assert app.title[0].value == "Monaco Grand Prix"
-    assert len(app.metric) >= 6
+    metrics = {metric.label: metric.value for metric in app.metric}
+    assert metrics["Pilotos na sessão"] == "1"
+    assert metrics["Volta mais rápida na sessão"] == "90.200 s"
+    assert metrics["Maior velocidade na sessão"] == "290 km/h"
+    assert metrics["GPs na temporada"] == "1"
+    assert metrics["Sessões na temporada"] == "2"
+    assert metrics["Líder do campeonato"] == "—"
+    classification = app.dataframe[0].value
+    assert classification["Position"].tolist() == [1]
+    assert classification["Tempo total"].tolist() == ["0:01:30.200"]
+    assert any(widget.label == "Equipe" for widget in app.selectbox)
+    assert app.multiselect[0].label == "Piloto"
 
 
 def test_online_dashboard_uses_openf1_client_and_renders_latest_data(
@@ -173,7 +224,8 @@ def test_online_dashboard_uses_openf1_client_and_renders_latest_data(
     assert not app.exception
     assert app.title[0].value == "Monaco Grand Prix"
     assert any(
-        metric.label == "Piloto líder" and metric.value == "Charles Leclerc (#16)"
+        metric.label == "Líder do campeonato"
+        and metric.value == "Charles Leclerc (#16)"
         for metric in app.metric
     )
 

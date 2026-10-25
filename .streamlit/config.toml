@@ -1,16 +1,31 @@
 [theme]
 base = "dark"
-primaryColor = "#e10600"
-backgroundColor = "#0b0b0d"
-secondaryBackgroundColor = "#17171b"
-textColor = "#f5f5f5"
+primaryColor = "#DC0000"
+backgroundColor = "#0E1117"
+secondaryBackgroundColor = "#161B22"
+textColor = "#F5F7FA"
 font = "sans serif"
 showWidgetBorder = false
-borderColor = "#34343a"
-baseRadius = "large"
-chartCategoricalColors = ["#e10600", "#00d2be", "#ff8700", "#3671c6", "#229971", "#64c4ff", "#ff87bc", "#b6babd", "#6692ff", "#52e252"]
-paddingTop = "2rem"
+showSidebarBorder = false
+borderColor = "#30363D"
+grayColor = "#B0B8C4"
+baseRadius = "medium"
+chartCategoricalColors = ["#DC0000", "#00D2BE", "#0600EF", "#FF8700", "#0093CC", "#006F62", "#B6BABD", "#52E252", "#6692FF", "#64C4FF"]
+chartSequentialColors = ["#F5F7FA", "#DCE3EB", "#B0B8C4", "#8C98A5", "#687583", "#4A5562", "#36404B", "#242B35", "#161B22", "#0E1117"]
+chartDivergingColors = ["#0600EF", "#352FF2", "#625CF5", "#928EF8", "#C1BFFC", "#F0F1F3", "#F7C8A5", "#F4A06C", "#F07835", "#DC0000"]
+dataframeHeaderBackgroundColor = "#161B22"
+dataframeHeaderTextColor = "#F5F7FA"
+dataframeBorderColor = "#30363D"
+paddingTop = "1rem"
+paddingBottom = "1rem"
+headingFontSizes = ["30px", "24px", "20px", "16px", "14px", "12px"]
+headingFontWeights = [700, 650, 600, 600, 550, 500]
+metricValueFontSize = "1.8rem"
 
 [theme.sidebar]
-backgroundColor = "#111114"
-secondaryBackgroundColor = "#1a1a1f"
+backgroundColor = "#0E1117"
+secondaryBackgroundColor = "#161B22"
+textColor = "#F5F7FA"
+primaryColor = "#DC0000"
+borderColor = "#30363D"
+paddingTop = "0.5rem"
