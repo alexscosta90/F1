@@ -130,14 +130,18 @@ def test_offline_dashboard_renders_without_openf1_requests(
     assert metrics["Pilotos na sessão"] == "1"
     assert metrics["Volta mais rápida na sessão"] == "90.200 s"
     assert metrics["Maior velocidade na sessão"] == "290 km/h"
-    assert metrics["GPs na temporada"] == "1"
-    assert metrics["Sessões na temporada"] == "2"
-    assert metrics["Líder do campeonato"] == "—"
+    assert metrics["Voltas válidas disponíveis"] == "1"
+    assert "Líder do campeonato" not in metrics
+    assert any(widget.label == "Dados para analisar" for widget in app.selectbox)
     classification = app.dataframe[0].value
     assert classification["Position"].tolist() == [1]
     assert classification["Tempo total"].tolist() == ["0:01:30.200"]
     assert any(widget.label == "Equipe" for widget in app.selectbox)
     assert app.multiselect[0].label == "Piloto"
+
+    app.selectbox(key="offline_profile").set_value("Estrategia de pneus").run()
+    assert not app.exception
+    assert app.warning
 
 
 def test_online_dashboard_uses_openf1_client_and_renders_latest_data(

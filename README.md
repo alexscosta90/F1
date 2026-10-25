@@ -61,3 +61,22 @@ poetry run dashboard
 ```
 
 As seis páginas são Dashboard executivo, Corridas, Pilotos, Equipes, Voltas e Resultados. Os filtros incluem ano, Grande Prêmio, tipo de sessão, equipe e piloto. O catálogo online é salvo localmente para manter os nomes oficiais no modo Offline. Veja o [guia do dashboard e deploy](docs/dashboard.md).
+
+
+## Analises offline
+
+No dashboard, selecione **Offline** para explorar os snapshots locais sem chamar a
+API. O seletor de ano mostra temporadas com arquivos de pilotos salvos; o filtro
+**Dados para analisar** limita os GPs e sessoes aos arquivos disponiveis de voltas,
+resultados oficiais ou stints. A disponibilidade indica arquivos nao vazios;
+registros invalidos continuam sujeitos as validacoes existentes.
+
+A pagina inicial offline apresenta os primeiros colocados da sessao, melhor volta,
+velocidade maxima e quantidade de voltas validas. As abas permitem comparar as
+melhores voltas e consultar o resultado oficial. Os filtros de equipe e piloto
+continuam aplicados a essa sessao. Esses destaques nao sao pontos de campeonato.
+Estrategia e compostos ficam na pagina **Voltas**, quando ha stints salvos.
+
+Dados locais nao sao atualizados automaticamente. Para coletar outra temporada,
+execute `poetry run f1 --year 2025` quando a API permitir acesso. Para publicar os
+novos snapshots, versione os arquivos desejados em `data/` e envie ao GitHub.

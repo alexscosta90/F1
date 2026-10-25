@@ -59,3 +59,18 @@ def test_snapshot_years_excludes_catalog_only_seasons(tmp_path: Path) -> None:
     (session / "drivers.jsonl").write_text('{"driver_number": 16}\n', encoding="utf-8")
     assert snapshot_years(tmp_path) == [2024]
     assert snapshot_years(tmp_path / "missing") == []
+
+
+def test_session_snapshots_indexes_only_nonempty_supported_endpoints(
+    tmp_path: Path,
+) -> None:
+    from f1.dashboard_data import session_snapshots
+
+    session = tmp_path / "2024" / "99"
+    session.mkdir(parents=True)
+    (session / "laps.jsonl").write_text('{"driver_number": 4}\n', encoding="utf-8")
+    (session / "stints.jsonl").write_text("", encoding="utf-8")
+    (session / "manifest.jsonl").write_text("{}", encoding="utf-8")
+    (session.parent / "_catalog").mkdir()
+    assert session_snapshots(tmp_path, 2024) == {99: {"laps"}}
+    assert session_snapshots(tmp_path, 2025) == {}

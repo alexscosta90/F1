@@ -31,7 +31,12 @@ from f1.dashboard_analytics import (
     stint_timeline,
     valid_laps,
 )
-from f1.dashboard_data import available_years, load_season, snapshot_years
+from f1.dashboard_data import (
+    available_years,
+    load_season,
+    session_snapshots,
+    snapshot_years,
+)
 from f1.dashboard_repository import FileRepository, OpenF1Repository
 from f1.dashboard_service import DashboardService
 from f1.dashboard_theme import (
@@ -592,6 +597,9 @@ def _session_grid(context: dict[str, object]) -> pd.DataFrame:
 def _executive() -> None:
     context = _context()
     data, laps, results, _ = _selected_data()
+    if context["source"] == "Offline":
+        _offline_executive(context, data, laps, results)
+        return
     drivers = data.get("drivers", pd.DataFrame())
     names = _driver_names(drivers)
     durations = (
@@ -696,6 +704,90 @@ def _executive() -> None:
         )
         _best_lap_chart(
             laps, drivers, "Melhor volta valida por piloto - sessao selecionada", 10
+        )
+
+
+def _offline_executive(
+    context: dict[str, object],
+    data: dict[str, pd.DataFrame],
+    laps: pd.DataFrame,
+    results: pd.DataFrame,
+) -> None:
+    drivers = data.get("drivers", pd.DataFrame())
+    names = _driver_names(drivers)
+    st.subheader("Explore o acervo local")
+    st.caption(
+        "Resultados e voltas salvos da sessao selecionada. "
+        "Sem consultas a API ou atualizacao em tempo real. "
+        "Os destaques abaixo respeitam os filtros de equipe e piloto; "
+        "nao representam a classificacao do campeonato."
+    )
+    fastest = best_laps(laps)
+    _metrics(
+        [
+            (
+                "Pilotos na sessão",
+                laps["driver_number"].nunique()
+                if "driver_number" in laps
+                else len(results),
+            ),
+            ("Voltas válidas disponíveis", len(laps)),
+            (
+                "Volta mais rápida na sessão",
+                f"{fastest.iloc[0]['best_lap']:.3f} s"
+                if not fastest.empty
+                else "Indisponivel",
+            ),
+            (
+                "Maior velocidade na sessão",
+                f"{_speed_max(laps):.0f} km/h"
+                if _speed_max(laps) is not None
+                else "Indisponivel",
+            ),
+        ]
+    )
+    highlights, timing, official = st.tabs(
+        [
+            "Destaques da sessao",
+            "Comparar melhores voltas",
+            "Resultado oficial",
+        ]
+    )
+    with highlights:
+        ranked = ordered_results(results)
+        if ranked.empty:
+            st.info(
+                "Esta sessao nao possui resultados oficiais salvos. "
+                "Explore as melhores voltas."
+            )
+        else:
+            st.subheader("Primeiros colocados oficiais")
+            teams = _team_names(drivers)
+            for column, (_, row) in zip(
+                st.columns(min(3, len(ranked))), ranked.head(3).iterrows(), strict=True
+            ):
+                with column, st.container(border=True):
+                    st.caption(f"P{int(row['position'])} / SESSAO")
+                    st.subheader(_display_driver(row.get("driver_number"), names))
+                    st.caption(
+                        teams.get(
+                            _as_int(row.get("driver_number")), "Equipe indisponivel"
+                        )
+                    )
+        if not fastest.empty:
+            fastest_name = _display_driver(fastest.iloc[0]["driver_number"], names)
+            st.success(
+                f"Melhor volta valida: {fastest_name} "
+                f"- {fastest.iloc[0]['best_lap']:.3f} s"
+            )
+        st.caption(
+            "Estrategia e compostos: pagina Voltas. Analise de equipes: pagina Equipes."
+        )
+    with timing:
+        _best_lap_chart(laps, drivers, "Melhor volta valida por piloto", 30)
+    with official:
+        _results_chart(
+            results, drivers, str(context["gp_name"]), str(context["session_type"])
         )
 
 
@@ -1409,13 +1501,14 @@ def main() -> None:
         )
         st.caption("Temporada e sessao")
         if mode == "Offline":
-            if not offline_years:
+            local_years = snapshot_years(data_dir)
+            if not local_years:
                 st.warning(
                     "Não encontrei temporadas locais em `data/`.",
                     title="Sem dados offline",
                 )
                 return
-            years = offline_years
+            years = local_years
         else:
             years = list(range(datetime.now(UTC).year, 2022, -1))
         if st.session_state.get("season_year") not in years:
@@ -1443,6 +1536,26 @@ def main() -> None:
             )
             catalog = _offline_catalog(str(data_dir.resolve()), int(year), fingerprint)
         meetings, sessions = _catalog_frames(catalog)
+        if mode == "Offline" and not sessions.empty:
+            inventory = session_snapshots(data_dir, int(year))
+            profiles = {
+                "Todas as analises locais": None,
+                "Tempos de volta": "laps",
+                "Resultados oficiais": "session_result",
+                "Estrategia de pneus": "stints",
+            }
+            profile = st.selectbox(
+                "Dados para analisar", list(profiles), key="offline_profile"
+            )
+            endpoint = profiles[profile]
+            keys = [
+                key
+                for key, endpoints in inventory.items()
+                if endpoints and (endpoint is None or endpoint in endpoints)
+            ]
+            sessions = sessions[sessions["session_key"].isin(keys)]
+            meetings = meetings[meetings["meeting_key"].isin(sessions["meeting_key"])]
+            st.caption(f"{len(sessions)} sessoes locais disponiveis para esta analise.")
         if meetings.empty or sessions.empty:
             st.warning(
                 "Não há calendário ou sessões para esse ano.",
