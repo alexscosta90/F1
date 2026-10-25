@@ -1,23 +1,65 @@
-﻿name: quality
+name: CI
+
 on:
   push:
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  checks:
+  quality:
+    name: Quality checks
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - uses: snok/install-poetry@v1
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
         with:
           version: "2.5.1"
-      - run: poetry config virtualenvs.in-project true
-      - run: poetry install --no-interaction
-      - run: poetry check
-      - run: poetry run ruff check .
-      - run: poetry run ruff format . --check
-      - run: poetry run ruff check . --select I
-      - run: poetry run pytest tests/unit --cov=f1 --cov-report=term-missing --cov-fail-under=50
-      - run: poetry run mkdocs build
+
+      - name: Cache Poetry downloads
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pypoetry
+          key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
+
+      - name: Configure Poetry
+        run: poetry config virtualenvs.in-project true
+
+      - name: Install dependencies
+        run: poetry install --no-interaction --sync
+
+      - name: Validate project and lockfile
+        run: poetry check --lock
+
+      - name: Check lint
+        run: poetry run ruff check .
+
+      - name: Check formatting
+        run: poetry run ruff format . --check
+
+      - name: Check import order
+        run: poetry run ruff check . --select I
+
+      - name: Run unit tests with coverage
+        run: poetry run pytest tests/unit --cov=f1 --cov-report=term-missing --cov-fail-under=50
+
+      - name: Build documentation
+        run: poetry run mkdocs build --strict
