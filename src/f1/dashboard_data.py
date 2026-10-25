@@ -19,6 +19,19 @@ def available_years(data_dir: Path) -> list[int]:
     )
 
 
+def snapshot_years(data_dir: Path) -> list[int]:
+    """List seasons with session snapshots, excluding catalog-only seasons."""
+    return [
+        year
+        for year in available_years(data_dir)
+        if any(
+            path.parent.name.isdigit()
+            for path in (data_dir / str(year)).glob("*/drivers.jsonl")
+            if path.stat().st_size > 0
+        )
+    ]
+
+
 def _read_jsonl(path: Path) -> Iterator[dict[str, object]]:
     if not path.exists():
         return

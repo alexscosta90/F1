@@ -48,3 +48,14 @@ def test_load_season_reads_jsonl_and_manifest_without_network(tmp_path: Path) ->
 
 def test_load_season_handles_missing_year(tmp_path: Path) -> None:
     assert load_season(tmp_path, 2024)["sessions"] == []
+
+
+def test_snapshot_years_excludes_catalog_only_seasons(tmp_path: Path) -> None:
+    from f1.dashboard_data import snapshot_years
+
+    (tmp_path / "2026" / "_catalog").mkdir(parents=True)
+    session = tmp_path / "2024" / "99"
+    session.mkdir(parents=True)
+    (session / "drivers.jsonl").write_text('{"driver_number": 16}\n', encoding="utf-8")
+    assert snapshot_years(tmp_path) == [2024]
+    assert snapshot_years(tmp_path / "missing") == []

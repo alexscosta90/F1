@@ -31,7 +31,7 @@ from f1.dashboard_analytics import (
     stint_timeline,
     valid_laps,
 )
-from f1.dashboard_data import available_years, load_season
+from f1.dashboard_data import available_years, load_season, snapshot_years
 from f1.dashboard_repository import FileRepository, OpenF1Repository
 from f1.dashboard_service import DashboardService
 from f1.dashboard_theme import (
@@ -159,6 +159,12 @@ def _offline_endpoint(
 
 
 def _fallback(message: str) -> None:
+    if "HTTP 401" in message:
+        message = (
+            "A OpenF1 recusou o acesso sem autenticacao valida (HTTP 401). "
+            "Durante sessoes ao vivo, isso pode afetar tambem dados historicos. "
+            "Mudamos para os dados locais disponiveis."
+        )
     st.session_state["_force_offline"] = True
     st.session_state["_fallback_message"] = message
     st.rerun()
@@ -1383,8 +1389,12 @@ def main() -> None:
     offline_years = available_years(data_dir)
     if st.session_state.pop("_force_offline", False):
         st.session_state["data_source"] = "Offline"
-        if offline_years and st.session_state.get("season_year") not in offline_years:
-            st.session_state["season_year"] = offline_years[0]
+        fallback_years = snapshot_years(data_dir) or offline_years
+        if fallback_years and st.session_state.get("season_year") not in fallback_years:
+            st.session_state["season_year"] = fallback_years[0]
+    message = st.session_state.pop("_fallback_message", None)
+    if message:
+        st.warning(message, title="Modo Offline ativado")
     with st.sidebar:
         st.markdown("## :red[FORMULA 1] · Analytics")
         default_source = None if "data_source" in st.session_state else "Online"

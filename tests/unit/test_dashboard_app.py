@@ -230,7 +230,10 @@ def test_online_dashboard_uses_openf1_client_and_renders_latest_data(
     )
 
 
-def test_online_failure_switches_to_local_data(tmp_path: Path, monkeypatch) -> None:
+@pytest.mark.parametrize("status", [401, 404])
+def test_online_failure_switches_to_local_data(
+    tmp_path: Path, monkeypatch, status
+) -> None:
     st.cache_data.clear()
     st.cache_resource.clear()
     year_dir = tmp_path / "2026"
@@ -253,7 +256,7 @@ def test_online_failure_switches_to_local_data(tmp_path: Path, monkeypatch) -> N
 
     def fail_online(request: object, timeout: float) -> None:
         del timeout
-        raise HTTPError(request.full_url, 404, "temporarily unavailable", {}, None)  # type: ignore[attr-defined]
+        raise HTTPError(request.full_url, status, "temporarily unavailable", {}, None)  # type: ignore[attr-defined]
 
     monkeypatch.setenv("F1_OUTPUT_DIR", str(tmp_path))
     monkeypatch.setattr("f1.ingestion.client.urlopen", fail_online)
@@ -269,4 +272,6 @@ def test_online_failure_switches_to_local_data(tmp_path: Path, monkeypatch) -> N
     assert not app.exception
     assert app.segmented_control[0].value == "Offline"
     assert app.warning
-    assert "OpenF1 está indisponível" in app.warning[0].value
+    assert "OpenF1" in app.warning[0].value
+    if status == 401:
+        assert "HTTP 401" in app.warning[0].value
