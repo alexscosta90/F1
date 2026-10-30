@@ -1,82 +1,221 @@
-# F1 OpenF1 Data Pipeline
+# 🏎️ F1 Analytics | Pipeline de Dados e Dashboard
 
-Pipeline local em Python para descobrir etapas e sessões da Fórmula 1 e coletar resultados, pilotos, voltas, grid e stints da API histórica OpenF1.
+**Análise de dados da Fórmula 1 com Python, OpenF1 e Streamlit.**
 
-## Requisitos
+Projeto prático de Engenharia de Dados desenvolvido durante meus estudos, utilizando dados históricos da Fórmula 1 disponibilizados pela API OpenF1.
 
-- Python 3.12 (faixa suportada: `>=3.12,<3.13`)
+A proposta foi construir um pipeline capaz de coletar, organizar e disponibilizar informações de corridas, pilotos, equipes, voltas e resultados, reunindo esses dados em um dashboard interativo.
+
+O projeto coloca em prática conceitos de consumo de APIs, processamento de dados, automação, testes e visualização.
+
+### 🏁 Acesse o dashboard
+
+**[🚀 Explorar F1 Analytics](https://f1alex.streamlit.app/)**
+
+O dashboard permite explorar diferentes temporadas e sessões, comparar pilotos e equipes e analisar dados de desempenho nas pistas.
+
+## 🛠️ Tecnologias utilizadas
+
+| Tecnologia | Aplicação |
+|---|---|
+| Python | Desenvolvimento do pipeline |
+| OpenF1 API | Fonte de dados da Fórmula 1 |
+| Pandas | Manipulação e análise de dados |
+| Streamlit | Dashboard interativo |
+| Plotly | Gráficos e visualizações |
+| Poetry | Ambiente virtual e dependências |
+| Pytest / pytest-cov | Testes automatizados e cobertura |
+| Ruff | Lint e formatação de código |
+| MkDocs Material | Documentação técnica |
+| Git / GitHub | Versionamento e organização |
+
+## 🏗️ Arquitetura do projeto
+
+O pipeline consulta a API OpenF1, identifica as etapas e sessões disponíveis e realiza a coleta dos dados.
+
+```text
+       OPENF1 API
+            |
+            v
+   COLETA DE DADOS
+        Python
+            |
+            v
+   VALIDAÇÃO E CONTROLE
+      Logs / Manifestos
+            |
+            v
+     ARMAZENAMENTO
+      Arquivos JSONL
+            |
+            v
+     PROCESSAMENTO
+     Python / Pandas
+            |
+            v
+      F1 ANALYTICS
+   Streamlit + Plotly
+```
+
+Os dados coletados são armazenados por temporada, sessão e endpoint, facilitando a organização e o reprocessamento.
+
+O projeto também possui mecanismos de controle de requisições, novas tentativas após falhas e registros das execuções.
+
+## 📊 Funcionalidades do dashboard
+
+O F1 Analytics possui seis páginas principais:
+
+| Página | O que é possível analisar |
+|---|---|
+| 🏁 Dashboard executivo | Visão geral dos indicadores da temporada ou sessão |
+| 🏎️ Corridas | Informações sobre Grandes Prêmios e sessões |
+| 👨‍🚀 Pilotos | Consulta e comparação de pilotos |
+| 🏆 Equipes | Análise das equipes e classificações disponíveis |
+| ⏱️ Voltas | Tempos de volta, desempenho e estratégias |
+| 📋 Resultados | Classificações e resultados oficiais |
+
+### Filtros interativos
+
+É possível selecionar temporada, Grande Prêmio, tipo de sessão, equipe e piloto, conforme a disponibilidade dos dados.
+
+O dashboard também apresenta indicadores como melhor volta, velocidade máxima e informações de classificação.
+
+## 🌐 Modos Online e Offline
+
+O dashboard trabalha com duas fontes de dados:
+
+**Online:** consulta a API OpenF1, com controle de requisições, novas tentativas e cache temporário.
+
+**Offline:** utiliza arquivos JSONL armazenados localmente, permitindo consultar dados previamente coletados sem realizar novas chamadas à API.
+
+Se a consulta online falhar, a aplicação pode utilizar os dados locais disponíveis.
+
+Essa separação permite explorar o projeto mesmo quando a API apresenta limitações ou indisponibilidade, desde que os dados necessários já tenham sido coletados.
+
+## 📁 Estrutura do repositório
+
+```text
+F1/
+├── .github/             # Configurações do GitHub
+├── .streamlit/          # Configurações do dashboard
+├── data/                # Dados locais organizados por sessão
+├── docs/                # Documentação técnica
+├── src/
+│   └── f1/             # Código da aplicação
+├── tests/               # Testes automatizados
+├── Dockerfile           # Containerização
+├── mkdocs.yml           # Configuração da documentação
+├── poetry.lock          # Dependências resolvidas
+├── pyproject.toml       # Configuração do projeto
+└── README.md
+```
+
+## ▶️ Como executar o projeto
+
+### Pré-requisitos
+
+- Python 3.12
 - Poetry 2.x
+- Git
 
-## Instalação
+### 1. Clone o repositório
 
-```powershell
-poetry config virtualenvs.in-project true --local
+```bash
+git clone https://github.com/alexscosta90/F1.git
+cd F1
+```
+
+### 2. Instale as dependências
+
+```bash
 poetry install
 ```
 
-## Execução
+### 3. Execute a coleta
 
-Coleta todos os endpoints padrão de todas as sessões disponíveis para uma temporada:
+Exemplo para a temporada de 2024:
 
-```powershell
+```bash
 poetry run f1 --year 2024
 ```
 
-Filtre etapa ou sessão e selecione endpoints/destino:
+Também é possível selecionar sessões e endpoints específicos:
 
-```powershell
-poetry run f1 --year 2024 --meeting-key 1234 --endpoints drivers,laps,weather --output-dir data
+```bash
 poetry run f1 --year 2024 --session-key 9159 --endpoints laps,stints
 ```
 
-A API é consultada sem credenciais. O programa descobre `meeting_key` e `session_key`, grava logs operacionais e escreve em `data/<ano>/<session_key>/<endpoint>.jsonl`. Cada reexecução substitui atomicamente os arquivos do endpoint. Um `manifest.jsonl` por sessão registra escopo, contagens, duração e identificador da execução.
+As respostas são armazenadas em arquivos JSONL, organizados por temporada e sessão.
 
-## Decisão de armazenamento do MVP
+### 4. Inicie o dashboard
 
-O plano ainda não informa o produto analítico nem o padrão de consulta. Para tornar o MVP local executável, JSONL em diretórios locais foi escolhido provisoriamente por não exigir serviço ou credenciais. O limite de reprocessamento é uma sessão; arquivos são substituídos por endpoint, com deduplicação natural pelo snapshot completo retornado pela fonte. A gravação é atômica por arquivo. Uma falha durante publicação de vários endpoints pode deixar endpoints de execuções diferentes, então consulte o manifesto e reexecute a sessão. O destino deverá ser reavaliado quando volume, leitores e análise prioritária forem definidos.
-
-## Desenvolvimento e qualidade
-
-```powershell
-poetry run ruff check .
-poetry run ruff format . --check
-poetry run ruff check . --select I
-poetry run pytest tests/unit --cov=f1 --cov-report=term-missing --cov-fail-under=50
-poetry run mkdocs build
-```
-
-Veja [a documentação técnica](docs/index.md) para arquitetura, contratos e desenvolvimento.
-
-## Limitações
-
-Dados históricos gratuitos estão disponíveis a partir de 2023. Dados em tempo real requerem assinatura. Disponibilidade e atraso variam por endpoint e sessão; respostas vazias são válidas, mas falhas HTTP ou de rede não são convertidas em sucesso vazio. Campos ausentes, extras e nulos são preservados; registros incompatíveis com a sessão são contabilizados como rejeitados. Veja `.codex/doc.api.md` para o resumo de endpoints utilizado no projeto.
-
-## Dashboard F1 Analytics
-
-O dashboard abre por padrão no modo **Online** e usa o cliente OpenF1 existente, com o rate limiter global e os retries atuais. As respostas ficam em cache por um minuto e a interface atualiza automaticamente. Se uma consulta falhar, a fonte muda para **Offline** e lê os JSONL locais; Offline não faz chamadas externas.
-
-```powershell
-poetry install
+```bash
 poetry run dashboard
 ```
 
-As seis páginas são Dashboard executivo, Corridas, Pilotos, Equipes, Voltas e Resultados. Os filtros incluem ano, Grande Prêmio, tipo de sessão, equipe e piloto. O catálogo online é salvo localmente para manter os nomes oficiais no modo Offline. Veja o [guia do dashboard e deploy](docs/dashboard.md).
+O Streamlit abrirá a aplicação localmente no navegador.
 
+**Observação:** o modo Online depende da disponibilidade da API. Dados históricos podem ser consultados sem credenciais, enquanto o acesso em tempo real está sujeito às condições de autenticação e assinatura da OpenF1.
 
-## Analises offline
+## 🧪 Qualidade de código e testes
 
-No dashboard, selecione **Offline** para explorar os snapshots locais sem chamar a
-API. O seletor de ano mostra temporadas com arquivos de pilotos salvos; o filtro
-**Dados para analisar** limita os GPs e sessoes aos arquivos disponiveis de voltas,
-resultados oficiais ou stints. A disponibilidade indica arquivos nao vazios;
-registros invalidos continuam sujeitos as validacoes existentes.
+O projeto utiliza ferramentas de qualidade para manter a organização do código e verificar seu comportamento.
 
-A pagina inicial offline apresenta os primeiros colocados da sessao, melhor volta,
-velocidade maxima e quantidade de voltas validas. As abas permitem comparar as
-melhores voltas e consultar o resultado oficial. Os filtros de equipe e piloto
-continuam aplicados a essa sessao. Esses destaques nao sao pontos de campeonato.
-Estrategia e compostos ficam na pagina **Voltas**, quando ha stints salvos.
+**Lint:**
 
-Dados locais nao sao atualizados automaticamente. Para coletar outra temporada,
-execute `poetry run f1 --year 2025` quando a API permitir acesso. Para publicar os
-novos snapshots, versione os arquivos desejados em `data/` e envie ao GitHub.
+```bash
+poetry run ruff check .
+```
+
+**Formatação:**
+
+```bash
+poetry run ruff format . --check
+```
+
+**Testes e cobertura:**
+
+```bash
+poetry run pytest tests/unit --cov=f1 --cov-report=term-missing --cov-fail-under=50
+```
+
+**Documentação:**
+
+```bash
+poetry run mkdocs build
+```
+
+A configuração atual estabelece uma cobertura mínima de 50% para o escopo medido.
+
+## 📚 Documentação
+
+O repositório possui documentação adicional com informações sobre arquitetura, contratos, desenvolvimento, testes e funcionamento do dashboard.
+
+- [Documentação técnica](docs/index.md)
+- [Guia do dashboard e deploy](docs/dashboard.md)
+
+## 📡 Fonte dos dados
+
+Os dados são obtidos por meio da [OpenF1 API](https://openf1.org/), que disponibiliza informações relacionadas à Fórmula 1, incluindo pilotos, sessões, voltas, resultados e outros dados de desempenho.
+
+A disponibilidade das informações depende da temporada, do tipo de sessão e das condições de acesso à API.
+
+Este é um projeto pessoal de estudo e análise de dados, sem vínculo oficial com a Fórmula 1 ou suas equipes.
+
+## 🎯 Sobre o projeto
+
+Desenvolvi este projeto como parte da minha jornada de aprendizagem em Engenharia de Dados e Inteligência Artificial.
+
+Além do interesse pela Fórmula 1, a proposta foi aplicar conhecimentos técnicos em um cenário prático, trabalhando com consumo de APIs, organização de dados, automação, testes e desenvolvimento de dashboards.
+
+O projeto segue em evolução, com oportunidades de aprimoramento nas análises, visualizações e funcionalidades.
+
+---
+
+### 👨‍💻 Autor
+
+**Alex Santos da Costa**
+
+Engenheiro Eletricista | Pós-graduando em Engenharia de Dados e Inteligência Artificial
+
+[GitHub](https://github.com/alexscosta90) | [LinkedIn](https://www.linkedin.com/in/alexsantosdacosta/) | [Dashboard F1](https://f1alex.streamlit.app/)
